@@ -3,1077 +3,326 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MeGames English - Takım Kelime Oyunu</title>
+    <title>Me Games English - Competition Edition</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@600&family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
     <style>
-        /* Genel Stiller */
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        :root {
+            --primary: #0d9488;
+            --primary-dark: #0f172a;
+            --bg-light: #f8fafc;
+            --t1-color: #ef4444; /* Kırmızı Takım */
+            --t2-color: #3b82f6; /* Mavi Takım */
+            --white: #ffffff;
+            --success: #22c55e;
         }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+        body { background-color: var(--bg-light); color: var(--primary-dark); min-height: 100vh; display: flex; flex-direction: column; overflow-x: hidden; }
+
+        header { background: var(--white); padding: 15px 40px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 10px rgba(0,0,0,0.05); z-index: 10; }
+        .logo { font-size: 26px; font-weight: 800; color: var(--primary); display: flex; align-items: center; gap: 12px; }
+
+        /* Dil Switcher */
+        .lang-switch-container { display: flex; align-items: center; gap: 10px; cursor: pointer; }
+        .toggle-track { width: 70px; height: 32px; background: #e2e8f0; border-radius: 20px; position: relative; transition: 0.3s; }
+        .toggle-thumb { width: 30px; height: 26px; background: var(--primary); border-radius: 15px; position: absolute; top: 3px; left: 3px; transition: 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55); display: flex; justify-content: center; align-items: center; color: white; font-size: 10px; font-weight: bold; }
+        .lang-switch-container.en .toggle-thumb { transform: translateX(34px); }
+
+        .container { flex: 1; display: flex; flex-direction: column; width: 100%; position: relative; }
+        .card { background: var(--white); border-radius: 24px; padding: 40px; margin: 20px auto; max-width: 1000px; box-shadow: 0 10px 30px rgba(0,0,0,0.04); border: 1px solid #f1f5f9; text-align: center; }
+
+        /* Ünite Grid */
+        .unit-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 15px; margin-top: 20px; }
+        .unit-btn { background: var(--white); border: 2px solid #e2e8f0; padding: 20px; border-radius: 16px; cursor: pointer; transition: 0.2s; font-weight: 600; display: flex; flex-direction: column; gap: 8px; align-items: center; }
+        .unit-btn:hover { border-color: var(--primary); background: #f0fdfa; transform: translateY(-3px); }
+
+        /* --- OYUN ALANI (BÖLÜNMÜŞ EKRAN) --- */
+        #screenGame { display: flex; flex-direction: row; height: calc(100vh - 80px); padding: 0; margin: 0; max-width: none; border-radius: 0; width: 100vw; }
         
-        body {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: #333;
-            line-height: 1.6;
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-        }
-        
-        .container {
-            max-width: 1400px;
-            margin: 0 auto;
-            padding: 0 30px;
-        }
-        
-        /* Header */
-        header {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(10px);
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-            position: sticky;
-            top: 0;
-            z-index: 100;
-        }
-        
-        .header-content {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 20px 0;
-        }
-        
-        .logo {
-            font-size: 28px;
-            font-weight: 700;
-            color: #2c3e50;
-            text-decoration: none;
-            display: flex;
-            align-items: center;
-        }
-        
-        .logo i {
-            margin-right: 12px;
-            color: #764ba2;
-            font-size: 32px;
-        }
-        
-        /* Ana İçerik */
-        main {
-            flex: 1;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 50px 0;
-        }
-        
-        .game-card {
-            background: rgba(255, 255, 255, 0.92);
-            backdrop-filter: blur(15px);
-            border-radius: 24px;
-            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.15);
-            padding: 50px;
-            width: 100%;
-            max-width: 1200px;
-            text-align: center;
-            border: 1px solid rgba(255, 255, 255, 0.3);
-        }
-        
-        h1 {
-            color: #2c3e50;
-            margin-bottom: 20px;
-            font-size: 42px;
+        .team-zone { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px; position: relative; transition: 0.3s; }
+        .team-1-zone { background: #fff5f5; border-right: 2px dashed #fee2e2; }
+        .team-2-zone { background: #f0f7ff; }
+
+        .team-name-tag { font-size: 28px; font-weight: 800; margin-bottom: 10px; }
+        .score-display { font-size: 64px; font-weight: 900; margin-bottom: 30px; }
+        .team-1-zone .team-name-tag, .team-1-zone .score-display { color: var(--t1-color); }
+        .team-2-zone .team-name-tag, .team-2-zone .score-display { color: var(--t2-color); }
+
+        /* Ortadaki Kelime Kutusu */
+        .central-word-container {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 5;
+            background: var(--primary-dark);
+            color: white;
+            padding: 30px 60px;
+            border-radius: 20px;
+            font-size: 40px;
             font-weight: 800;
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.3);
+            text-transform: uppercase;
+            min-width: 300px;
+            pointer-events: none;
         }
-        
-        .subtitle {
-            color: #5d6d7e;
-            margin-bottom: 40px;
+
+        .options-column { display: grid; grid-template-columns: 1fr; gap: 15px; width: 100%; max-width: 350px; }
+        .opt-btn {
+            padding: 20px;
+            background: white;
+            border: 3px solid #e2e8f0;
+            border-radius: 15px;
             font-size: 20px;
-            font-weight: 500;
-        }
-        
-        /* Takım Giriş Bölümü */
-        .team-setup {
-            margin-bottom: 40px;
-        }
-        
-        .team-setup h2 {
-            color: #2c3e50;
-            margin-bottom: 30px;
-            font-size: 28px;
-            font-weight: 700;
-        }
-        
-        .team-inputs {
-            display: flex;
-            justify-content: space-between;
-            gap: 30px;
-            margin-top: 30px;
-        }
-        
-        .team-input {
-            flex: 1;
-            text-align: left;
-        }
-        
-        .team-input label {
-            display: block;
-            margin-bottom: 12px;
-            font-weight: 600;
-            color: #2c3e50;
-            font-size: 18px;
-        }
-        
-        .team-input input {
-            width: 100%;
-            padding: 18px;
-            border: 2px solid #e0e0e0;
-            border-radius: 14px;
-            font-size: 17px;
-            transition: all 0.3s;
-            background: rgba(255, 255, 255, 0.8);
-        }
-        
-        .team-input input:focus {
-            border-color: #764ba2;
-            outline: none;
-            box-shadow: 0 0 0 3px rgba(118, 75, 162, 0.2);
-            background: white;
-        }
-        
-        .team1-color {
-            color: #e74c3c;
-        }
-        
-        .team2-color {
-            color: #3498db;
-        }
-        
-        /* Zorluk Seçimi */
-        .difficulty-section {
-            margin-bottom: 40px;
-        }
-        
-        .difficulty-section h2 {
-            color: #2c3e50;
-            margin-bottom: 30px;
-            font-size: 28px;
-            font-weight: 700;
-        }
-        
-        .difficulty-buttons {
-            display: flex;
-            justify-content: center;
-            gap: 25px;
-            margin-top: 30px;
-            flex-wrap: wrap;
-        }
-        
-        .difficulty-btn {
-            padding: 20px 40px;
-            border: none;
-            border-radius: 16px;
-            font-size: 18px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.4s ease;
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            min-width: 180px;
-            background: white;
-        }
-        
-        .difficulty-btn i {
-            font-size: 32px;
-            margin-bottom: 12px;
-        }
-        
-        .difficulty-btn:hover {
-            transform: translateY(-8px);
-            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
-        }
-        
-        .easy {
-            border: 3px solid #2ecc71;
-            color: #2ecc71;
-        }
-        
-        .easy:hover {
-            background: #2ecc71;
-            color: white;
-        }
-        
-        .medium {
-            border: 3px solid #f39c12;
-            color: #f39c12;
-        }
-        
-        .medium:hover {
-            background: #f39c12;
-            color: white;
-        }
-        
-        .hard {
-            border: 3px solid #e74c3c;
-            color: #e74c3c;
-        }
-        
-        .hard:hover {
-            background: #e74c3c;
-            color: white;
-        }
-        
-        /* Oyun Bölümü */
-        .game-section {
-            display: none;
-        }
-        
-        .teams-info {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 40px;
-            gap: 25px;
-        }
-        
-        .team-card {
-            flex: 1;
-            padding: 25px;
-            border-radius: 20px;
-            text-align: center;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-            transition: transform 0.3s ease;
-            background: white;
-        }
-        
-        .team-card:hover {
-            transform: translateY(-5px);
-        }
-        
-        .team1-card {
-            border-top: 8px solid #e74c3c;
-            background: linear-gradient(135deg, #fff, #ffebee);
-        }
-        
-        .team2-card {
-            border-top: 8px solid #3498db;
-            background: linear-gradient(135deg, #fff, #e3f2fd);
-        }
-        
-        .team-name {
-            font-size: 24px;
-            font-weight: 700;
-            margin-bottom: 15px;
-        }
-        
-        .team-score {
-            font-size: 48px;
-            font-weight: 800;
-        }
-        
-        .current-team {
-            font-size: 22px;
-            font-weight: 700;
-            margin: 25px 0;
-            padding: 15px;
-            border-radius: 14px;
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            color: white;
-            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
-        }
-        
-        .word-card {
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            border-radius: 24px;
-            padding: 50px 40px;
-            margin: 35px 0;
-            text-align: center;
-            color: white;
-            box-shadow: 0 15px 35px rgba(102, 126, 234, 0.4);
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .word-card::before {
-            content: '';
-            position: absolute;
-            top: -50%;
-            left: -50%;
-            width: 200%;
-            height: 200%;
-            background: radial-gradient(circle, rgba(255,255,255,0.15) 0%, rgba(255,255,255,0) 70%);
-            transform: rotate(30deg);
-        }
-        
-        .english-word {
-            font-size: 52px;
-            margin-bottom: 15px;
-            font-weight: 800;
-            text-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
-        }
-        
-        .word-hint {
-            font-size: 18px;
-            opacity: 0.9;
-            font-weight: 500;
-        }
-        
-        .options {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 25px;
-            margin-top: 40px;
-        }
-        
-        .option-btn {
-            padding: 25px;
-            border: none;
-            border-radius: 16px;
-            background: white;
-            font-size: 18px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            font-weight: 600;
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
-            position: relative;
-            overflow: hidden;
-            color: #2c3e50;
-        }
-        
-        .option-btn::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.6), transparent);
-            transition: left 0.6s;
-        }
-        
-        .option-btn:hover::before {
-            left: 100%;
-        }
-        
-        .option-btn:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 12px 25px rgba(0, 0, 0, 0.15);
-        }
-        
-        .correct {
-            background: linear-gradient(135deg, #2ecc71, #27ae60);
-            color: white;
-            animation: pulse 0.6s;
-        }
-        
-        .incorrect {
-            background: linear-gradient(135deg, #e74c3c, #c0392b);
-            color: white;
-            animation: shake 0.6s;
-        }
-        
-        @keyframes pulse {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.08); }
-            100% { transform: scale(1); }
-        }
-        
-        @keyframes shake {
-            0%, 100% { transform: translateX(0); }
-            20%, 60% { transform: translateX(-8px); }
-            40%, 80% { transform: translateX(8px); }
-        }
-        
-        .game-controls {
-            display: flex;
-            justify-content: space-between;
-            margin-top: 40px;
-        }
-        
-        .control-btn {
-            padding: 18px 35px;
-            border: none;
-            border-radius: 14px;
-            font-size: 18px;
             font-weight: 700;
             cursor: pointer;
-            transition: all 0.3s ease;
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+            transition: 0.2s;
         }
-        
-        .pass-btn {
-            background: linear-gradient(135deg, #f39c12, #e67e22);
-            color: white;
-        }
-        
-        .next-btn {
-            background: linear-gradient(135deg, #9b59b6, #8e44ad);
-            color: white;
-        }
-        
-        .control-btn:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 12px 25px rgba(0, 0, 0, 0.2);
-        }
-        
-        /* Sonuç Bölümü */
-        .result-section {
-            display: none;
-            text-align: center;
-            padding: 40px 30px;
-        }
-        
-        .winner-announcement {
-            font-size: 38px;
-            font-weight: 800;
-            margin: 30px 0;
-            padding: 25px;
-            border-radius: 20px;
-            background: linear-gradient(135deg, #2ecc71, #27ae60);
-            color: white;
-            box-shadow: 0 12px 30px rgba(46, 204, 113, 0.4);
-        }
-        
-        .final-scores {
-            display: flex;
-            justify-content: center;
-            gap: 50px;
-            margin: 40px 0;
-        }
-        
-        .final-team-score {
-            text-align: center;
-            padding: 30px;
-            border-radius: 20px;
-            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15);
-            min-width: 220px;
-            background: white;
-        }
-        
-        .final-team1 {
-            border-top: 8px solid #e74c3c;
-            background: linear-gradient(135deg, #fff, #ffebee);
-        }
-        
-        .final-team2 {
-            border-top: 8px solid #3498db;
-            background: linear-gradient(135deg, #fff, #e3f2fd);
-        }
-        
-        .final-score {
-            font-size: 56px;
-            font-weight: 800;
-            margin: 15px 0;
-        }
-        
-        .restart-btn {
-            padding: 20px 45px;
-            background: linear-gradient(135deg, #2c3e50, #34495e);
-            color: white;
-            border: none;
-            border-radius: 16px;
-            font-size: 18px;
-            font-weight: 700;
-            cursor: pointer;
-            margin-top: 30px;
-            transition: all 0.3s ease;
-            box-shadow: 0 10px 25px rgba(44, 62, 80, 0.3);
-        }
-        
-        .restart-btn:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 15px 30px rgba(44, 62, 80, 0.4);
-        }
-        
-        /* Footer */
-        footer {
-            background: rgba(44, 62, 80, 0.9);
-            color: white;
-            padding: 30px 0;
-            text-align: center;
-            margin-top: auto;
-        }
-        
-        .copyright {
-            font-size: 16px;
-            color: #bdc3c7;
-        }
-        
-        /* Responsive */
-        @media (max-width: 1024px) {
-            .container {
-                max-width: 100%;
-                padding: 0 20px;
-            }
-            
-            .game-card {
-                padding: 40px 30px;
-            }
-            
-            .teams-info {
-                flex-direction: column;
-                gap: 20px;
-            }
-            
-            .options {
-                grid-template-columns: 1fr;
-            }
-        }
-        
-        @media (max-width: 768px) {
-            .header-content {
-                flex-direction: column;
-                text-align: center;
-            }
-            
-            .logo {
-                margin-bottom: 15px;
-                font-size: 24px;
-            }
-            
-            .game-card {
-                padding: 30px 20px;
-            }
-            
-            h1 {
-                font-size: 32px;
-            }
-            
-            .team-inputs {
-                flex-direction: column;
-            }
-            
-            .english-word {
-                font-size: 38px;
-            }
-            
-            .difficulty-buttons {
-                flex-direction: column;
-                align-items: center;
-            }
-            
-            .difficulty-btn {
-                width: 100%;
-                max-width: 280px;
-            }
-            
-            .final-scores {
-                flex-direction: column;
-                align-items: center;
-                gap: 20px;
-            }
-            
-            .game-controls {
-                flex-direction: column;
-                gap: 15px;
-            }
-            
-            .control-btn {
-                width: 100%;
-            }
-        }
+        .team-1-zone .opt-btn:hover:not(:disabled) { border-color: var(--t1-color); }
+        .team-2-zone .opt-btn:hover:not(:disabled) { border-color: var(--t2-color); }
+
+        /* Doğru/Yanlış Efektleri */
+        .opt-btn.correct { background: var(--success) !important; color: white !important; border-color: var(--success) !important; }
+        .opt-btn.wrong { background: var(--t1-color) !important; color: white !important; border-color: var(--t1-color) !important; }
+
+        .btn-main { padding: 15px 40px; background: var(--primary); color: white; border: none; border-radius: 12px; font-size: 18px; font-weight: bold; cursor: pointer; transition: 0.3s; }
+        .signature { font-family: 'Dancing Script', cursive; font-size: 24px; color: var(--primary); margin-top: 20px; display: block; }
+        .hidden { display: none !important; }
+
+        /* Konfeti */
+        .confetti { position: absolute; width: 10px; height: 10px; top: -10px; border-radius: 50%; animation: fall 3s linear forwards; }
+        @keyframes fall { to { transform: translateY(100vh) rotate(360deg); opacity: 0; } }
     </style>
 </head>
 <body>
-    <!-- Header -->
-    <header>
-        <div class="container">
-            <div class="header-content">
-                <a href="#" class="logo">
-                    <i class="fas fa-language"></i>
-                    MegaMES English
-                </a>
+
+<header>
+    <div class="logo"><i class="fas fa-graduation-cap"></i> Me Games English</div>
+    <div class="lang-switch-container" id="langToggle">
+        <span id="langText" style="font-weight: 800; color: #64748b;">TR</span>
+        <div class="toggle-track">
+            <div class="toggle-thumb" id="thumb">TR</div>
+        </div>
+    </div>
+</header>
+
+<div class="container">
+    <div id="screenTeams" class="card">
+        <h1 id="txtWelcome">Hoş Geldiniz</h1>
+        <p class="subtitle" id="txtDesc">Önce takımları belirleyelim</p>
+        <div style="display: flex; gap: 20px; margin-bottom: 30px;">
+            <div style="flex:1; text-align:left;">
+                <label style="font-weight:bold; color:var(--t1-color)" id="lblT1">1. Takım Adı</label>
+                <input type="text" id="t1Input" value="KARTALLAR" style="width:100%; padding:15px; border-radius:10px; border:2px solid #e2e8f0; margin-top:10px; font-weight:bold;">
+            </div>
+            <div style="flex:1; text-align:left;">
+                <label style="font-weight:bold; color:var(--t2-color)" id="lblT2">2. Takım Adı</label>
+                <input type="text" id="t2Input" value="ASLANLAR" style="width:100%; padding:15px; border-radius:10px; border:2px solid #e2e8f0; margin-top:10px; font-weight:bold;">
             </div>
         </div>
-    </header>
+        <button class="btn-main" onclick="goToUnits()" id="btnGoUnits">Devam Et</button>
+        <span class="signature">Designed by Muhammed Emir Turhan</span>
+    </div>
 
-    <!-- Ana İçerik -->
-    <main>
-        <div class="container">
-            <div class="game-card">
-                <h1>Takım Kelime Oyunu</h1>
-                <p class="subtitle">8. sınıf İngilizce dersi 2. ünitesi kelimelerini takım olarak yarışarak öğrenin</p>
-                
-                <!-- Takım Giriş Bölümü -->
-                <div class="team-setup" id="teamSetup">
-                    <h2>Takımlarınızı Oluşturun</h2>
-                    <div class="team-inputs">
-                        <div class="team-input">
-                            <label for="team1Name" class="team1-color"><i class="fas fa-users"></i> 1. Takım Adı</label>
-                            <input type="text" id="team1Name" placeholder="Takım 1" value="Kırmızı Takım">
-                        </div>
-                        <div class="team-input">
-                            <label for="team2Name" class="team2-color"><i class="fas fa-users"></i> 2. Takım Adı</label>
-                            <input type="text" id="team2Name" placeholder="Takım 2" value="Mavi Takım">
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- Zorluk Seçimi -->
-                <div class="difficulty-section" id="difficultySection">
-                    <h2>Zorluk Seviyesi Seçin</h2>
-                    <div class="difficulty-buttons">
-                        <button class="difficulty-btn easy" data-level="easy">
-                            <i class="fas fa-seedling"></i>
-                            Kolay
-                        </button>
-                        <button class="difficulty-btn medium" data-level="medium">
-                            <i class="fas fa-mountain"></i>
-                            Orta
-                        </button>
-                        <button class="difficulty-btn hard" data-level="hard">
-                            <i class="fas fa-fire"></i>
-                            Zor
-                        </button>
-                    </div>
-                </div>
-                
-                <!-- Oyun Bölümü -->
-                <div class="game-section" id="gameSection">
-                    <div class="teams-info">
-                        <div class="team-card team1-card">
-                            <div class="team-name" id="team1Display">Kırmızı Takım</div>
-                            <div class="team-score team1-color" id="team1Score">0</div>
-                        </div>
-                        <div class="team-card team2-card">
-                            <div class="team-name" id="team2Display">Mavi Takım</div>
-                            <div class="team-score team2-color" id="team2Score">0</div>
-                        </div>
-                    </div>
-                    
-                    <div class="current-team" id="currentTeamDisplay">Sıra: Kırmızı Takım'da</div>
-                    
-                    <div class="word-card">
-                        <div class="english-word" id="englishWord">Word</div>
-                        <div class="word-hint" id="wordHint">İngilizce kelimenin Türkçe anlamını bulun</div>
-                    </div>
-                    
-                    <div class="options" id="optionsContainer">
-                        <!-- Seçenekler JavaScript ile oluşturulacak -->
-                    </div>
-                    
-                    <div class="game-controls">
-                        <button class="control-btn pass-btn" id="passBtn">Pas Geç</button>
-                        <button class="control-btn next-btn" id="nextBtn" style="display: none;">Sonraki Takım</button>
-                    </div>
-                </div>
-                
-                <!-- Sonuç Bölümü -->
-                <div class="result-section" id="resultSection">
-                    <h2>Oyun Bitti!</h2>
-                    <div class="winner-announcement" id="winnerAnnouncement">Kazanan: Kırmızı Takım</div>
-                    
-                    <div class="final-scores">
-                        <div class="final-team-score final-team1">
-                            <div class="team-name" id="finalTeam1Name">Kırmızı Takım</div>
-                            <div class="final-score team1-color" id="finalTeam1Score">0</div>
-                        </div>
-                        <div class="final-team-score final-team2">
-                            <div class="team-name" id="finalTeam2Name">Mavi Takım</div>
-                            <div class="final-score team2-color" id="finalTeam2Score">0</div>
-                        </div>
-                    </div>
-                    
-                    <button class="restart-btn" id="restartBtn">Yeniden Başlat</button>
-                </div>
-            </div>
+    <div id="screenUnits" class="card hidden">
+        <h1 id="txtSelectUnit">Ünite Seçin</h1>
+        <p class="subtitle" id="txtUnitDesc">Hangi ünite kelimeleriyle kapışacaksınız?</p>
+        <div class="unit-grid" id="unitGrid"></div>
+    </div>
+
+    <div id="screenGame" class="hidden">
+        <div class="central-word-container" id="wordDisplay">WORD</div>
+        
+        <div class="team-zone team-1-zone">
+            <div class="team-name-tag" id="dispT1Name">TAKIM 1</div>
+            <div class="score-display" id="score1">0</div>
+            <div class="options-column" id="opts1"></div>
         </div>
-    </main>
 
-    <!-- Footer -->
-    <footer>
-        <div class="container">
-            <div class="copyright">
-                &copy; 2023 MegaMES English. Tüm hakları saklıdır.
-            </div>
+        <div class="team-zone team-2-zone">
+            <div class="team-name-tag" id="dispT2Name">TAKIM 2</div>
+            <div class="score-display" id="score2">0</div>
+            <div class="options-column" id="opts2"></div>
         </div>
-    </footer>
+    </div>
 
-    <script>
-        // Oyun kodları buraya gelecek (önceki kodun aynısı)
-        // PDF'den alınan kelimeleri zorluk seviyelerine göre ayrıştırma
-        const wordDatabase = {
-            easy: [
-                { english: "always", turkish: "her zaman" },
-                { english: "after", turkish: "daha sonra" },
-                { english: "before", turkish: "daha önce" },
-                { english: "boring", turkish: "sıkıcı" },
-                { english: "cloud", turkish: "bulut" },
-                { english: "early", turkish: "erken" },
-                { english: "every day", turkish: "her gün" },
-                { english: "every week", turkish: "her hafta" },
-                { english: "film", turkish: "film" },
-                { english: "go to school", turkish: "okula gitmek" },
-                { english: "in the morning", turkish: "sabah" },
-                { english: "in the afternoon", turkish: "öğleden sonra" },
-                { english: "in the evening", turkish: "akşam" },
-                { english: "like", turkish: "sevmek/hoşlanmak" },
-                { english: "love", turkish: "sevmek" },
-                { english: "map", turkish: "harita" },
-                { english: "never", turkish: "asla/hiç" },
-                { english: "often", turkish: "sık sık" },
-                { english: "popular", turkish: "popüler" },
-                { english: "rainbow", turkish: "gökkuşağı" },
-                { english: "sometimes", turkish: "bazen" },
-                { english: "song", turkish: "şarkı" },
-                { english: "tent", turkish: "çadır" },
-                { english: "usually", turkish: "genellikle" }
-            ],
-            medium: [
-                { english: "absurd", turkish: "saçma" },
-                { english: "archery", turkish: "okçuluk" },
-                { english: "backpack", turkish: "sırt çantası" },
-                { english: "be in a hurry", turkish: "acelesi olmak" },
-                { english: "biographical", turkish: "biyografik" },
-                { english: "bloom", turkish: "çiçek açmak" },
-                { english: "calligraphy", turkish: "güzel yazı sanatı" },
-                { english: "campfire", turkish: "kamp ateşi" },
-                { english: "camping", turkish: "kamp yapmak" },
-                { english: "can't stand", turkish: "dayanamamak" },
-                { english: "chat with friends online", turkish: "internette sohbet etmek" },
-                { english: "close friend", turkish: "yakın arkadaş" },
-                { english: "compass", turkish: "pusula" },
-                { english: "countryside", turkish: "kırsal bölge" },
-                { english: "dessert", turkish: "tatlı" },
-                { english: "detective", turkish: "polisiye" },
-                { english: "dislike", turkish: "hoşlanmamak" },
-                { english: "energetic", turkish: "enerjik" },
-                { english: "enjoy", turkish: "hoşlanmak" },
-                { english: "fascinating", turkish: "büyüleyici" },
-                { english: "fashionable", turkish: "moda" },
-                { english: "folk", turkish: "halk müziği" },
-                { english: "get dressed", turkish: "giyinmek" },
-                { english: "get up", turkish: "kalkmak" },
-                { english: "huge", turkish: "kocaman" },
-                { english: "impressive", turkish: "etkileyici" },
-                { english: "lazy", turkish: "tembel" },
-                { english: "make a campfire", turkish: "kamp ateşi yakmak" },
-                { english: "marshmallow", turkish: "şekerleme" },
-                { english: "matches", turkish: "kibrit" },
-                { english: "pocketknife", turkish: "çakı" },
-                { english: "prefer", turkish: "tercih etmek" },
-                { english: "rap", turkish: "rep müzik" },
-                { english: "relaxing", turkish: "rahatlatıcı/dinlendirici" },
-                { english: "riding a bike", turkish: "bisiklete binme" },
-                { english: "rock", turkish: "rok müzik" },
-                { english: "rope", turkish: "halat" },
-                { english: "sleeping bags", turkish: "uyku tulumu" },
-                { english: "snob", turkish: "ukala" },
-                { english: "torch", turkish: "fener" },
-                { english: "trekking", turkish: "doğa yürüyüşü" }
-            ],
-            hard: [
-                { english: "arrive home from school", turkish: "okuldan eve dönmek" },
-                { english: "attend", turkish: "katılmak" },
-                { english: "basic equipment", turkish: "temel araç gereç" },
-                { english: "behaving fairly", turkish: "adil davranmak" },
-                { english: "being honest", turkish: "dürüst olmak" },
-                { english: "being realistic", turkish: "gerçekçi olma" },
-                { english: "being respectful", turkish: "saygılı olma" },
-                { english: "beyond the borders", turkish: "sınırların ötesinde" },
-                { english: "brainstorm", turkish: "beyin fırtınası yapmak" },
-                { english: "branch", turkish: "branş" },
-                { english: "buddy", turkish: "arkadaş/kanka" },
-                { english: "by the way", turkish: "bu arada" },
-                { english: "casual", turkish: "günlük" },
-                { english: "certain issues", turkish: "bazı sorunlar" },
-                { english: "children's", turkish: "çocuk kitabı" },
-                { english: "classical", turkish: "klasik müzik" },
-                { english: "comedian", turkish: "komedyen" },
-                { english: "contact", turkish: "iletişim kurmak" },
-                { english: "cultural heritage", turkish: "kültürel miras" },
-                { english: "disciplined", turkish: "disiplinli" },
-                { english: "do my homework", turkish: "ödev yapmak" },
-                { english: "doing karate", turkish: "karate yapma" },
-                { english: "drive to school", turkish: "arabayla okula bırakmak" },
-                { english: "drummer", turkish: "davulcu" },
-                { english: "duties", turkish: "görevler" },
-                { english: "educational goal", turkish: "eğitim hedefi" },
-                { english: "elderly relatives", turkish: "büyük akrabalar" },
-                { english: "enormous", turkish: "muazzam" },
-                { english: "every month", turkish: "her ay" },
-                { english: "excellent", turkish: "mükemmel" },
-                { english: "fantasy", turkish: "fantastik kitap" },
-                { english: "feed the chickens", turkish: "tavukları beslemek" },
-                { english: "fizzy drinks", turkish: "gazlı içecek" },
-                { english: "follow the news", turkish: "haberleri takip etmek" },
-                { english: "following the rules", turkish: "kurallara uymak" },
-                { english: "fond of", turkish: "düşkün olmak" },
-                { english: "gain", turkish: "kazanmak" },
-                { english: "get excited", turkish: "heyecanlanmak" },
-                { english: "get high grades", turkish: "yüksek not almak" },
-                { english: "go on foot", turkish: "yürüyerek gitmek" },
-                { english: "go out", turkish: "dışarı çıkmak" },
-                { english: "go to bed", turkish: "yatağa gitmek" },
-                { english: "go to gym", turkish: "spor salonuna gitmek" },
-                { english: "goal", turkish: "hedef" },
-                { english: "greet my friends", turkish: "arkadaşları selamlamak" },
-                { english: "grow", turkish: "büyümek" },
-                { english: "harmonic", turkish: "ahenkli" },
-                { english: "have breakfast", turkish: "kahvaltı yapmak" },
-                { english: "have chat", turkish: "sohbet etmek" },
-                { english: "have dinner", turkish: "akşam yemeği yemek" },
-                { english: "have lunch", turkish: "öğle yemeği yemek" },
-                { english: "health & beauty", turkish: "sağlık ve güzellik" },
-                { english: "healthy", turkish: "sağlıklı" },
-                { english: "history and tradition", turkish: "tarih ve gelenek" },
-                { english: "Indian", turkish: "Hint müziği" },
-                { english: "in turn", turkish: "sırayla" },
-                { english: "indoor activities", turkish: "kapalı mekan aktiviteleri" },
-                { english: "interested in", turkish: "ilgilenmek" },
-                { english: "Jazz", turkish: "caz müzik" },
-                { english: "join", turkish: "katılmak" },
-                { english: "just for fun", turkish: "eğlence olsun diye" },
-                { english: "keen on", turkish: "düşkün olmak" },
-                { english: "keeping up", turkish: "takip etmek" },
-                { english: "keyboard player", turkish: "klavyeci" },
-                { english: "late", turkish: "geç" },
-                { english: "later", turkish: "daha sonra" },
-                { english: "latest fashion", turkish: "en son moda" },
-                { english: "laughable", turkish: "komik" },
-                { english: "listen to music", turkish: "müzik dinlemek" },
-                { english: "location", turkish: "yer/konum" },
-                { english: "look fit", turkish: "fit görünmek" },
-                { english: "lower social class", turkish: "düşük sosyal sınıf" }
-            ]
-        };
+    <div id="screenResult" class="card hidden">
+        <h1 id="txtGameOver">OYUN BİTTİ</h1>
+        <h2 id="winnerName" style="font-size: 48px; margin: 20px 0; color: var(--primary);"></h2>
+        <button class="btn-main" onclick="location.reload()" id="btnRestart">YENİDEN BAŞLAT</button>
+    </div>
+</div>
 
-        // Oyun değişkenleri
-        let currentLevel = '';
-        let currentWords = [];
-        let currentWordIndex = 0;
-        let team1Score = 0;
-        let team2Score = 0;
-        let currentTeam = 1; // 1 veya 2
-        let usedWords = [];
-        let team1Name = "Kırmızı Takım";
-        let team2Name = "Mavi Takım";
+<script>
+    const units = [
+        { id: 1, name: "Arkadaşlık", icon: "fa-users", words: [{e:"Back up", t:"Desteklemek"}, {e:"Count on", t:"Güvenmek"}, {e:"Get on well", t:"İyi geçinmek"}, {e:"Honest", t:"Dürüst"}, {e:"Jealous", t:"Kıskanç"}, {e:"Buddy", t:"Kanka"}, {e:"Loyal", t:"Sadık"}] },
+        { id: 2, name: "Gençlik Hayatı", icon: "fa-headphones", words: [{e:"Trendy", t:"Modaya uygun"}, {e:"Unbearable", t:"Dayanılmaz"}, {e:"Attend", t:"Katılmak"}, {e:"Casual", t:"Günlük"}, {e:"Terrific", t:"Müthiş"}, {e:"Campfire", t:"Kamp ateşi"}] },
+        { id: 3, name: "Mutfakta", icon: "fa-utensils", words: [{e:"Bake", t:"Fırında pişirmek"}, {e:"Chop", t:"Doğramak"}, {e:"Ingredient", t:"Malzeme"}, {e:"Recipe", t:"Tarif"}, {e:"Sour", t:"Ekşi"}, {e:"Boil", t:"Haşlamak"}] },
+        { id: 4, name: "Telefonda", icon: "fa-phone", words: [{e:"Hang up", t:"Kapatmak"}, {e:"Pick up", t:"Açmak"}, {e:"Connect", t:"Bağlanmak"}, {e:"Engaged", t:"Meşgul"}, {e:"Memo", t:"Not"}] },
+        { id: 5, name: "İnternet", icon: "fa-wifi", words: [{e:"Upload", t:"Yüklemek"}, {e:"Attachment", t:"Dosya eki"}, {e:"Log in", t:"Giriş yapmak"}, {e:"Confirm", t:"Onaylamak"}, {e:"Subscriber", t:"Abone"}] },
+        { id: 6, name: "Maceralar", icon: "fa-mountain", words: [{e:"Rafting", t:"Rafting"}, {e:"Skydiving", t:"Paraşüt"}, {e:"Caving", t:"Mağara"}, {e:"Brave", t:"Cesur"}] },
+        { id: 7, name: "Turizm", icon: "fa-plane", words: [{e:"Historical", t:"Tarihi"}, {e:"Destination", t:"Varış noktası"}, {e:"Accommodation", t:"Konaklama"}] },
+        { id: 8, name: "Ev İşleri", icon: "fa-broom", words: [{e:"Vacuum", t:"Süpürmek"}, {e:"Laundry", t:"Çamaşır"}, {e:"Responsibility", t:"Sorumluluk"}] },
+        { id: 9, name: "Bilim", icon: "fa-flask", words: [{e:"Invention", t:"İcat"}, {e:"Discovery", t:"Keşif"}, {e:"Experiment", t:"Deney"}] },
+        { id: 10, name: "Doğa Olayları", icon: "fa-bolt", words: [{e:"Earthquake", t:"Deprem"}, {e:"Flood", t:"Sel"}, {e:"Drought", t:"Kuraklık"}] }
+    ];
 
-        // DOM elementleri
-        const teamSetup = document.getElementById('teamSetup');
-        const difficultySection = document.getElementById('difficultySection');
-        const gameSection = document.getElementById('gameSection');
-        const resultSection = document.getElementById('resultSection');
-        
-        const team1NameInput = document.getElementById('team1Name');
-        const team2NameInput = document.getElementById('team2Name');
-        
-        const team1Display = document.getElementById('team1Display');
-        const team2Display = document.getElementById('team2Display');
-        const team1ScoreDisplay = document.getElementById('team1Score');
-        const team2ScoreDisplay = document.getElementById('team2Score');
-        const currentTeamDisplay = document.getElementById('currentTeamDisplay');
-        
-        const englishWord = document.getElementById('englishWord');
-        const wordHint = document.getElementById('wordHint');
-        const optionsContainer = document.getElementById('optionsContainer');
-        const nextBtn = document.getElementById('nextBtn');
-        const passBtn = document.getElementById('passBtn');
-        
-        const winnerAnnouncement = document.getElementById('winnerAnnouncement');
-        const finalTeam1Name = document.getElementById('finalTeam1Name');
-        const finalTeam2Name = document.getElementById('finalTeam2Name');
-        const finalTeam1Score = document.getElementById('finalTeam1Score');
-        const finalTeam2Score = document.getElementById('finalTeam2Score');
-        const restartBtn = document.getElementById('restartBtn');
+    let currentLang = 'tr';
+    let selectedUnit = null;
+    let scores = [0, 0];
+    let wordPool = [];
+    let currentWord = null;
+    let isRoundActive = false;
 
-        // Zorluk seviyesi seçimi
-        document.querySelectorAll('.difficulty-btn').forEach(button => {
-            button.addEventListener('click', function() {
-                currentLevel = this.getAttribute('data-level');
-                team1Name = team1NameInput.value || "Kırmızı Takım";
-                team2Name = team2NameInput.value || "Mavi Takım";
-                startGame();
-            });
+    const ui = {
+        tr: { welcome: "Hoş Geldiniz", desc: "Önce takımları belirleyelim", lblT1: "1. Takım Adı", lblT2: "2. Takım Adı", go: "Devam Et", select: "Ünite Seçin", uDesc: "Hangi ünite kelimeleriyle kapışacaksınız?", end: "OYUN BİTTİ", restart: "YENİDEN BAŞLAT" },
+        en: { welcome: "Welcome", desc: "Set your team names", lblT1: "1st Team Name", lblT2: "2nd Team Name", go: "Continue", select: "Select Unit", uDesc: "Choose a unit to compete", end: "GAME OVER", restart: "RESTART" }
+    };
+
+    // --- DİL YÖNETİMİ ---
+    document.getElementById('langToggle').onclick = function() {
+        this.classList.toggle('en');
+        currentLang = this.classList.contains('en') ? 'en' : 'tr';
+        document.getElementById('thumb').textContent = currentLang.toUpperCase();
+        document.getElementById('langText').textContent = currentLang.toUpperCase();
+        updateMenuLang();
+    };
+
+    function updateMenuLang() {
+        const t = ui[currentLang];
+        document.getElementById('txtWelcome').textContent = t.welcome;
+        document.getElementById('txtDesc').textContent = t.desc;
+        document.getElementById('lblT1').textContent = t.lblT1;
+        document.getElementById('lblT2').textContent = t.lblT2;
+        document.getElementById('btnGoUnits').textContent = t.go;
+        document.getElementById('txtSelectUnit').textContent = t.select;
+        document.getElementById('txtUnitDesc').textContent = t.uDesc;
+        document.getElementById('txtGameOver').textContent = t.end;
+        document.getElementById('btnRestart').textContent = t.restart;
+    }
+
+    // --- NAVİGASYON ---
+    function goToUnits() {
+        document.getElementById('screenTeams').classList.add('hidden');
+        document.getElementById('screenUnits').classList.remove('hidden');
+        renderUnits();
+    }
+
+    function renderUnits() {
+        const grid = document.getElementById('unitGrid');
+        grid.innerHTML = '';
+        units.forEach(u => {
+            const btn = document.createElement('button');
+            btn.className = 'unit-btn';
+            btn.innerHTML = `<i class="fas ${u.icon}"></i><span>${u.name}</span>`;
+            btn.onclick = () => startCompetition(u);
+            grid.appendChild(btn);
         });
+    }
 
-        // Oyunu başlat
-        function startGame() {
-            teamSetup.style.display = 'none';
-            difficultySection.style.display = 'none';
-            gameSection.style.display = 'block';
-            resultSection.style.display = 'none';
-            
-            // Takım isimlerini ve skorları güncelle
-            team1Display.textContent = team1Name;
-            team2Display.textContent = team2Name;
-            team1Score = 0;
-            team2Score = 0;
-            team1ScoreDisplay.textContent = team1Score;
-            team2ScoreDisplay.textContent = team2Score;
-            
-            currentTeam = 1;
-            updateCurrentTeamDisplay();
-            
-            currentWordIndex = 0;
-            usedWords = [];
-            
-            // Seçilen zorluk seviyesine göre kelimeleri al
-            currentWords = [...wordDatabase[currentLevel]];
-            
-            // İlk kelimeyi göster
-            showNextWord();
-        }
+    // --- OYUN MANTIĞI ---
+    function startCompetition(unit) {
+        selectedUnit = unit;
+        wordPool = [...unit.words].sort(() => Math.random() - 0.5);
+        document.getElementById('screenUnits').classList.add('hidden');
+        document.getElementById('screenGame').classList.remove('hidden');
+        document.getElementById('dispT1Name').textContent = document.getElementById('t1Input').value;
+        document.getElementById('dispT2Name').textContent = document.getElementById('t2Input').value;
+        nextRound();
+    }
 
-        // Sıradaki takımı güncelle
-        function updateCurrentTeamDisplay() {
-            const teamName = currentTeam === 1 ? team1Name : team2Name;
-            currentTeamDisplay.textContent = `Sıra: ${teamName}'da`;
-            currentTeamDisplay.style.background = currentTeam === 1 
-                ? 'linear-gradient(135deg, #e74c3c, #c0392b)' 
-                : 'linear-gradient(135deg, #3498db, #2980b9)';
-        }
-
-        // Sonraki kelimeyi göster
-        function showNextWord() {
-            // Tüm kelimeler kullanıldı mı kontrol et
-            if (usedWords.length >= currentWords.length) {
-                endGame();
-                return;
-            }
-            
-            // Rastgele bir kelime seç (daha önce kullanılmamış)
-            let randomIndex;
-            do {
-                randomIndex = Math.floor(Math.random() * currentWords.length);
-            } while (usedWords.includes(randomIndex));
-            
-            usedWords.push(randomIndex);
-            currentWordIndex = randomIndex;
-            
-            const currentWord = currentWords[currentWordIndex];
-            englishWord.textContent = currentWord.english;
-            
-            // Seçenekleri oluştur
-            createOptions(currentWord);
-            
-            nextBtn.style.display = 'none';
-            passBtn.style.display = 'block';
-        }
-
-        // Seçenekleri oluştur
-        function createOptions(correctWord) {
-            optionsContainer.innerHTML = '';
-            
-            // Doğru cevabı içeren bir seçenek listesi oluştur
-            let options = [correctWord.turkish];
-            
-            // Yanlış seçenekler ekle
-            while (options.length < 4) {
-                const randomIndex = Math.floor(Math.random() * currentWords.length);
-                const randomWord = currentWords[randomIndex];
-                
-                if (!options.includes(randomWord.turkish) && randomWord.english !== correctWord.english) {
-                    options.push(randomWord.turkish);
-                }
-            }
-            
-            // Seçenekleri karıştır
-            options = shuffleArray(options);
-            
-            // Seçenek butonlarını oluştur
-            options.forEach(option => {
-                const button = document.createElement('button');
-                button.className = 'option-btn';
-                button.textContent = option;
-                button.addEventListener('click', () => checkAnswer(option, correctWord.turkish));
-                optionsContainer.appendChild(button);
-            });
-        }
-
-        // Cevabı kontrol et
-        function checkAnswer(selectedAnswer, correctAnswer) {
-            const optionButtons = document.querySelectorAll('.option-btn');
-            
-            // Tüm butonları devre dışı bırak
-            optionButtons.forEach(button => {
-                button.disabled = true;
-                
-                // Doğru ve yanlış cevapları vurgula
-                if (button.textContent === correctAnswer) {
-                    button.classList.add('correct');
-                } else if (button.textContent === selectedAnswer && selectedAnswer !== correctAnswer) {
-                    button.classList.add('incorrect');
-                }
-            });
-            
-            // Cevap doğruysa puanı artır
-            if (selectedAnswer === correctAnswer) {
-                if (currentTeam === 1) {
-                    team1Score += 10;
-                    team1ScoreDisplay.textContent = team1Score;
-                } else {
-                    team2Score += 10;
-                    team2ScoreDisplay.textContent = team2Score;
-                }
-            }
-            
-            // Sonraki takım butonunu göster
-            nextBtn.style.display = 'block';
-            passBtn.style.display = 'none';
-        }
-
-        // Diziyi karıştır
-        function shuffleArray(array) {
-            for (let i = array.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [array[i], array[j]] = [array[j], array[i]];
-            }
-            return array;
-        }
-
-        // Takım değiştir
-        function switchTeam() {
-            currentTeam = currentTeam === 1 ? 2 : 1;
-            updateCurrentTeamDisplay();
-            showNextWord();
-        }
-
-        // Oyunu bitir
-        function endGame() {
-            gameSection.style.display = 'none';
-            resultSection.style.display = 'block';
-            
-            // Sonuçları güncelle
-            finalTeam1Name.textContent = team1Name;
-            finalTeam2Name.textContent = team2Name;
-            finalTeam1Score.textContent = team1Score;
-            finalTeam2Score.textContent = team2Score;
-            
-            // Kazananı belirle
-            if (team1Score > team2Score) {
-                winnerAnnouncement.textContent = `Kazanan: ${team1Name}`;
-                winnerAnnouncement.style.background = "linear-gradient(135deg, #e74c3c, #c0392b)";
-            } else if (team2Score > team1Score) {
-                winnerAnnouncement.textContent = `Kazanan: ${team2Name}`;
-                winnerAnnouncement.style.background = "linear-gradient(135deg, #3498db, #2980b9)";
-            } else {
-                winnerAnnouncement.textContent = "Oyun Berabere Bitti!";
-                winnerAnnouncement.style.background = "linear-gradient(135deg, #9b59b6, #8e44ad)";
-            }
-        }
-
-        // Olay dinleyicileri
-        nextBtn.addEventListener('click', switchTeam);
+    function nextRound() {
+        if (wordPool.length === 0) { endGame(); return; }
         
-        passBtn.addEventListener('click', () => {
-            // Pas geçince sıra diğer takıma geçer
-            switchTeam();
+        isRoundActive = true;
+        currentWord = wordPool.pop();
+        document.getElementById('wordDisplay').textContent = currentWord.e;
+        
+        // Şıkları oluştur
+        let opts = [currentWord.t];
+        let others = selectedUnit.words.filter(w => w.t !== currentWord.t).sort(() => Math.random() - 0.5);
+        
+        // Güvenli şık ekleme (eğer ünitede yeterli kelime yoksa patlamasın diye)
+        others.forEach(o => {
+            if(opts.length < 4) opts.push(o.t);
         });
         
-        restartBtn.addEventListener('click', () => {
-            resultSection.style.display = 'none';
-            teamSetup.style.display = 'block';
-            difficultySection.style.display = 'block';
+        while(opts.length < 4) {
+            opts.push("..."); // Eğer kelime sayısı 4'ten azsa dolgu yapar
+        }
+
+        opts.sort(() => Math.random() - 0.5);
+
+        renderOptions(opts);
+    }
+
+    function renderOptions(opts) {
+        const cont1 = document.getElementById('opts1');
+        const cont2 = document.getElementById('opts2');
+        cont1.innerHTML = ''; cont2.innerHTML = '';
+
+        opts.forEach(o => {
+            // Takım 1 Butonu
+            const b1 = document.createElement('button');
+            b1.className = 'opt-btn';
+            b1.textContent = o;
+            b1.onclick = () => check(1, b1, o);
+            cont1.appendChild(b1);
+
+            // Takım 2 Butonu
+            const b2 = document.createElement('button');
+            b2.className = 'opt-btn';
+            b2.textContent = o;
+            b2.onclick = () => check(2, b2, o);
+            cont2.appendChild(b2);
         });
-    </script>
+    }
+
+    function check(teamId, btn, val) {
+        if (!isRoundActive) return;
+
+        if (val === currentWord.t) {
+            isRoundActive = false;
+            btn.classList.add('correct');
+            scores[teamId - 1] += 10;
+            updateScores();
+            setTimeout(nextRound, 1000);
+        } else {
+            // Yanlış cevap: Puan düşür ve butonu devre dışı bırak
+            scores[teamId - 1] -= 5;
+            btn.classList.add('wrong');
+            btn.disabled = true;
+            updateScores();
+        }
+    }
+
+    function updateScores() {
+        document.getElementById('score1').textContent = scores[0];
+        document.getElementById('score2').textContent = scores[1];
+    }
+
+    function endGame() {
+        document.getElementById('screenGame').classList.add('hidden');
+        document.getElementById('screenResult').classList.remove('hidden');
+        const t1 = document.getElementById('t1Input').value;
+        const t2 = document.getElementById('t2Input').value;
+        let winner = scores[0] > scores[1] ? t1 : (scores[1] > scores[0] ? t2 : "BERABERE");
+        document.getElementById('winnerName').textContent = "KAZANAN: " + winner;
+        startConfetti();
+    }
+
+    function startConfetti() {
+        for(let i=0; i<60; i++) {
+            const c = document.createElement('div');
+            c.className = 'confetti';
+            c.style.left = Math.random() * 100 + "vw";
+            c.style.background = ["#ef4444", "#3b82f6", "#0d9488", "#f59e0b"][Math.floor(Math.random()*4)];
+            c.style.animationDelay = Math.random() * 2 + "s";
+            document.body.appendChild(c);
+        }
+    }
+</script>
+
 </body>
 </html>
