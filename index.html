@@ -83,12 +83,12 @@
         .score-display { font-size: 60px; font-weight: 900; line-height: 1; }
         .active-player-badge { background: var(--text-main); color: var(--bg-body); padding: 5px 15px; border-radius: 20px; font-weight: 800; font-size: 18px; display: inline-block; margin-top: 5px; }
 
-        /* YENİ: 1P (BOT) MODU ÖZEL TASARIMLARI */
+        /* 1P (BOT) MODU ÖZEL TASARIMLARI (PC İÇİN) */
         #screenGame.mode-1p .team-2-zone { display: none !important; }
         #screenGame.mode-1p .team-1-zone { width: 100% !important; border-right: none !important; padding-top: 120px; }
-        #screenGame.mode-1p .team-header { display: none; } /* Kendi bölgesindeki büyük skoru gizle */
+        #screenGame.mode-1p .team-header { display: none; } 
         
-        /* BOT MODU İÇİN YENİ MİNİ SKOR TABELASI (SOL ÜST) */
+        /* BOT MODU İÇİN MİNİ SKOR TABELASI (SOL ÜST) */
         .top-scoreboard-1p {
             position: absolute; top: 20px; left: 20px; background: var(--bg-card);
             border: 2px solid var(--border); padding: 10px 20px; border-radius: 20px;
@@ -98,26 +98,25 @@
         .top-scoreboard-1p span.p1-sc { color: var(--t1-color); font-size: 18px; }
         .top-scoreboard-1p span.bot-sc { color: var(--t2-color); font-size: 18px; }
 
-        /* YENİ: DYNAMIC ISLAND (APPLE STİLİ BİLDİRİM ADASI) */
+        /* DYNAMIC ISLAND (APPLE STİLİ MÜKEMMEL HAP TASARIMI) */
         .dynamic-island {
-            position: absolute; top: 20px; left: 50%; transform: translateX(-50%);
+            position: fixed; top: 15px; left: 50%; transform: translateX(-50%);
             background: #000000; color: #ffffff; border-radius: 40px;
             padding: 12px 25px; display: flex; flex-direction: column; align-items: center;
-            min-width: 200px; z-index: 9999;
-            box-shadow: 0 15px 35px rgba(0,0,0,0.4);
-            transition: all 0.5s cubic-bezier(0.68, -0.55, 0.27, 1.55); /* iPhone sıçrama efekti */
+            min-width: 220px; z-index: 10000;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            transition: all 0.5s cubic-bezier(0.68, -0.55, 0.27, 1.55); 
             overflow: hidden; opacity: 1;
         }
         .dynamic-island.hidden-island {
-            top: -50px; opacity: 0; transform: translate(-50%, -20px) scale(0.5); pointer-events: none;
+            top: -100px; opacity: 0; transform: translate(-50%, 0) scale(0.7); pointer-events: none;
         }
-        .di-content { display: flex; align-items: center; gap: 10px; font-weight: 600; font-size: 16px; white-space: nowrap; }
-        .di-progress-bar {
-            width: 100%; height: 4px; background: rgba(255,255,255,0.2); margin-top: 10px; border-radius: 2px; overflow: hidden;
-        }
+        .di-content { display: flex; align-items: center; gap: 10px; font-weight: 600; font-size: 15px; white-space: nowrap; }
+        .di-progress-bar { width: 100%; height: 3px; background: rgba(255,255,255,0.2); margin-top: 10px; border-radius: 3px; overflow: hidden; }
         .di-progress-fill { height: 100%; background: #ffffff; width: 100%; transform-origin: left; }
 
-        .central-word-container { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 10; background: #0f172a; color: white; padding: 25px 50px; border-radius: 20px; font-size: 42px; font-weight: 800; box-shadow: 0 20px 50px rgba(0,0,0,0.3); text-transform: uppercase; border: 4px solid var(--bg-card); text-align: center; transition: 0.3s; }
+        /* KELİME KUTUSU (PC İÇİN) */
+        .central-word-container { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 50; background: #0f172a; color: white; padding: 25px 50px; border-radius: 20px; font-size: 42px; font-weight: 800; box-shadow: 0 20px 50px rgba(0,0,0,0.3); text-transform: uppercase; border: 4px solid var(--bg-card); text-align: center; transition: 0.3s; }
 
         .golden-question .central-word-container { background: linear-gradient(135deg, #b45309 0%, #f59e0b 50%, #fbbf24 100%); border-color: #fcd34d; box-shadow: 0 0 50px rgba(245, 158, 11, 0.6); animation: goldPulse 1.5s infinite; }
         @keyframes goldPulse { 0% { transform: translate(-50%, -50%) scale(1); } 50% { transform: translate(-50%, -50%) scale(1.05); } 100% { transform: translate(-50%, -50%) scale(1); } }
@@ -140,10 +139,9 @@
         .confetti { position: absolute; width: 10px; height: 10px; top: -10px; border-radius: 50%; animation: fall 3s linear forwards; z-index: 100; }
         @keyframes fall { to { transform: translateY(100vh) rotate(360deg); opacity: 0; } }
 
-        /* MODERN VE MÜTEVAZI İMZA STİLİ */
         .signature { position: fixed; bottom: 15px; right: 20px; font-size: 13px; font-weight: 500; color: var(--text-sub); letter-spacing: 0.5px; opacity: 0.6; z-index: 100; pointer-events: none; }
 
-        /* MOBİL UYUMLULUK */
+        /* YENİ: MOBİL UYUMLULUK (KUSURSUZ DİZİLİM VE MERKEZLEME) */
         @media (max-width: 768px) {
             header { padding: 10px 15px; flex-direction: column; gap: 10px; }
             .logo-area { width: 100%; justify-content: center; position: relative; }
@@ -153,16 +151,32 @@
             .grade-selection-grid { grid-template-columns: 1fr; }
             .big-selection-grid { flex-direction: column; }
             .team-setup-grid { grid-template-columns: 1fr; gap: 15px; }
-            #screenGame { flex-direction: column; height: auto; min-height: calc(100vh - 100px); overflow-y: auto; padding-top: 10px; }
             
-            /* Mobilde Bot modu açıksa kelimeyi ve butonları ortala */
-            #screenGame.mode-1p .central-word-container { position: relative; top: auto; left: auto; transform: none; width: 95%; margin: 60px auto 20px auto; font-size: 32px; padding: 20px; }
-            #screenGame.mode-1p .options-column { margin-top: 0; }
+            /* 1P MODU MOBİL DİZİLİMİ - KESİNLİKLE ÜST ÜSTE BİNMEZ */
+            #screenGame.mode-1p { 
+                display: flex !important; flex-direction: column !important; 
+                justify-content: flex-start !important; align-items: center !important;
+                padding: 15px !important; height: auto !important; min-height: calc(100vh - 80px) !important; 
+            }
             
-            /* İki kişilik mobil görünüm */
-            #screenGame:not(.mode-1p) .central-word-container { position: relative; top: auto; left: auto; transform: none; width: 95%; margin: 15px auto; order: 2; padding: 15px; font-size: 28px; }
-            #screenGame:not(.mode-1p) .team-2-zone { order: 1; border-bottom: 2px dashed var(--border); padding: 10px; }
-            #screenGame:not(.mode-1p) .team-1-zone { order: 3; padding: 10px; border-right: none; }
+            #screenGame.mode-1p .central-word-container { 
+                position: relative !important; top: auto !important; left: auto !important; transform: none !important; 
+                width: 100% !important; margin: 40px 0 30px 0 !important; font-size: 32px !important; 
+                padding: 20px !important; order: 1 !important; box-shadow: 0 10px 20px rgba(0,0,0,0.1) !important;
+            }
+
+            #screenGame.mode-1p .team-1-zone { 
+                width: 100% !important; padding: 0 !important; order: 2 !important; justify-content: flex-start !important; 
+            }
+            
+            #screenGame.mode-1p .options-column { margin-top: 0 !important; width: 100% !important; }
+
+            /* 2P MODU MOBİL DİZİLİMİ */
+            #screenGame:not(.mode-1p) { display: flex; flex-direction: column; justify-content: flex-start; padding: 10px; height: auto; min-height: 100vh; }
+            #screenGame:not(.mode-1p) .central-word-container { position: relative !important; top: auto !important; left: auto !important; transform: none !important; width: 95% !important; margin: 15px auto !important; order: 2 !important; padding: 15px !important; font-size: 28px !important; }
+            #screenGame:not(.mode-1p) .team-2-zone { order: 1 !important; border-bottom: 2px dashed var(--border); padding-bottom: 15px; }
+            #screenGame:not(.mode-1p) .team-1-zone { order: 3 !important; padding-top: 15px; border-right: none; }
+            #screenGame:not(.mode-1p) .options-column { margin-top: 10px !important; width: 100%; }
             
             .team-header { position: relative; top: 0; margin-bottom: 10px; }
             .score-display { font-size: 40px; margin-bottom: 5px; }
@@ -278,28 +292,54 @@
 </div>
 
 <script>
-    // SES MOTORU
-    const AudioContext = window.AudioContext || window.webkitAudioContext;
-    const audioCtx = new AudioContext();
+    // YENİ: ÇÖKMEYİ ENGELLEYEN SES SİSTEMİ BAŞLATMASI
+    let audioCtx = null;
+    try {
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        if (AudioContext) audioCtx = new AudioContext();
+    } catch(e) {
+        console.warn("Cihaz ses altyapısını desteklemiyor, sessiz modda devam edilecek.");
+    }
+    
     let isSoundOn = true;
 
-    function playTone(freq, type, duration, vol) {
-        if (!isSoundOn) return;
-        if (audioCtx.state === 'suspended') audioCtx.resume();
-        const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain();
-        osc.type = type; osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
-        gain.gain.setValueAtTime(vol, audioCtx.currentTime); gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
-        osc.connect(gain); gain.connect(audioCtx.destination);
-        osc.start(); osc.stop(audioCtx.currentTime + duration);
-    }
+    // YENİ: HATA YUTUCU (TRY-CATCH) ZIRHLI ASENKRON SES FONKSİYONU
+    function playSafeSound(type) {
+        if (!isSoundOn || !audioCtx) return;
+        // Kodu asenkron (arkaplana) alıyoruz, böylece oyun motorunu asla donduramaz!
+        setTimeout(() => {
+            try {
+                if (audioCtx.state === 'suspended') {
+                    let p = audioCtx.resume();
+                    if(p !== undefined) p.catch(e=>{});
+                }
+                
+                let freq = 400, wave = 'sine', duration = 0.1, vol = 0.1;
+                
+                if(type === 'click') { freq = 400; wave = 'sine'; duration = 0.1; vol = 0.1; }
+                else if(type === 'correct') { freq = 523.25; wave = 'sine'; duration = 0.2; vol = 0.2; setTimeout(()=> playSafeSound('correct_2'), 100); }
+                else if(type === 'correct_2') { freq = 659.25; wave = 'sine'; duration = 0.3; vol = 0.2; }
+                else if(type === 'wrong') { freq = 150; wave = 'square'; duration = 0.3; vol = 0.1; }
+                else if(type === 'golden') { freq = 440; wave = 'sine'; duration = 0.5; vol = 0.1; setTimeout(()=> playSafeSound('golden_2'), 100); }
+                else if(type === 'golden_2') { freq = 554; wave = 'sine'; duration = 0.5; vol = 0.1; setTimeout(()=> playSafeSound('golden_3'), 100); }
+                else if(type === 'golden_3') { freq = 659; wave = 'sine'; duration = 0.8; vol = 0.1; }
+                else if(type === 'roll') { freq = 800; wave = 'triangle'; duration = 0.05; vol = 0.05; }
 
-    const soundFX = {
-        click: () => playTone(400, 'sine', 0.1, 0.1),
-        correct: () => { playTone(523.25, 'sine', 0.2, 0.2); setTimeout(() => playTone(659.25, 'sine', 0.3, 0.2), 100); },
-        wrong: () => playTone(150, 'square', 0.3, 0.1),
-        golden: () => { playTone(440, 'sine', 0.5, 0.1); setTimeout(() => playTone(554, 'sine', 0.5, 0.1), 100); setTimeout(() => playTone(659, 'sine', 0.8, 0.1), 200); },
-        roll: () => playTone(800, 'triangle', 0.05, 0.05)
-    };
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = wave;
+                osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+                gain.gain.setValueAtTime(vol, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start();
+                osc.stop(audioCtx.currentTime + duration);
+            } catch (err) {
+                // Tarayıcı hata verse bile oyun kodunun haberi olmaz, oyun akmaya devam eder.
+            }
+        }, 0);
+    }
 
     function toggleSound() {
         isSoundOn = !isSoundOn; document.querySelector('#btnSound i').className = isSoundOn ? "fas fa-volume-up" : "fas fa-volume-mute";
@@ -307,7 +347,7 @@
 
     function toggleFullScreen() {
         if (!document.fullscreenElement) {
-            document.documentElement.requestFullscreen().catch(err => { console.log(`Tam ekran hatası: ${err.message}`); });
+            document.documentElement.requestFullscreen().catch(err => {});
             document.querySelector('#btnFullscreen i').className = "fas fa-compress";
         } else {
             if (document.exitFullscreen) { document.exitFullscreen(); document.querySelector('#btnFullscreen i').className = "fas fa-expand"; }
@@ -385,7 +425,7 @@
 
     window.addEventListener('load', () => {
         setTimeout(() => { document.getElementById('splash-screen').classList.add('hidden-splash'); }, 2000);
-        document.body.addEventListener('click', (e) => { if(e.target.tagName === 'BUTTON' || e.target.closest('.control-btn')) soundFX.click(); });
+        document.body.addEventListener('click', (e) => { if(e.target.tagName === 'BUTTON' || e.target.closest('.control-btn')) playSafeSound('click'); });
         updateBackButton();
     });
 
@@ -407,8 +447,9 @@
         isRoundActive = false;
     }
 
+    // YENİ: EKRAN DEĞİŞİMLERİNDE BEYAZ/BOŞ EKRANI ÖNLEYEN SCROLL RESETLEME (window.scrollTo)
     function goBack() {
-        soundFX.click(); stopAllTimers();
+        playSafeSound('click'); stopAllTimers();
 
         if (!document.getElementById('screenGame').classList.contains('hidden')) {
             hideAllScreens(); document.getElementById('screenUnits').classList.remove('hidden'); scores = [0, 0]; updateScores();
@@ -433,17 +474,22 @@
         else if (!document.getElementById('screenResult').classList.contains('hidden')) {
             hideAllScreens(); document.getElementById('screenUnits').classList.remove('hidden'); scores = [0, 0]; updateScores();
         }
+        
+        window.scrollTo(0, 0); // Ekranı her zaman en tepeye sıfırla, boşlukta kalmasın
         updateBackButton();
     }
 
     function fullReset() {
         stopAllTimers(); hideAllScreens(); scores = [0, 0]; updateScores(); 
-        hasSelectedDevice = false; document.getElementById('screenDevice').classList.remove('hidden'); updateBackButton();
+        hasSelectedDevice = false; document.getElementById('screenDevice').classList.remove('hidden'); 
+        window.scrollTo(0, 0); // Ekranı her zaman en tepeye sıfırla
+        updateBackButton();
     }
 
     function selectDevice(dev) {
         deviceType = dev; hasSelectedDevice = true; document.getElementById('screenDevice').classList.add('hidden');
         if (dev === 'mobile') selectMode('1p'); else document.getElementById('screenMode').classList.remove('hidden');
+        window.scrollTo(0, 0);
         updateBackButton();
     }
 
@@ -457,7 +503,7 @@
             document.getElementById('p2Setup').style.display = 'none'; 
             document.getElementById('badge1').style.display = 'none';
             document.getElementById('badge2').style.display = 'none';
-            document.getElementById('screenGame').classList.add('mode-1p'); // YENİ: Tek kişilik mod sınıfı eklendi
+            document.getElementById('screenGame').classList.add('mode-1p');
             document.getElementById('topScore1P').classList.remove('hidden');
         } else {
             document.getElementById('txtDesc').textContent = "Sınıf mevcutlarını girin";
@@ -467,15 +513,18 @@
             document.getElementById('p2Setup').style.display = 'block'; 
             document.getElementById('badge1').style.display = 'inline-block';
             document.getElementById('badge2').style.display = 'inline-block';
-            document.getElementById('screenGame').classList.remove('mode-1p'); // YENİ: Sınıf modu
+            document.getElementById('screenGame').classList.remove('mode-1p');
             document.getElementById('topScore1P').classList.add('hidden');
         }
         document.getElementById('screenTeams').classList.remove('hidden');
+        window.scrollTo(0, 0);
         updateBackButton();
     }
 
     function goToGrade() {
-        if(audioCtx.state === 'suspended') audioCtx.resume();
+        if(audioCtx && audioCtx.state === 'suspended') {
+            audioCtx.resume().catch(e=>{});
+        }
         if (gameMode === '2p') {
             t1Size = parseInt(document.getElementById('t1SizeInput').value) || 15;
             t2Size = parseInt(document.getElementById('t2SizeInput').value) || 15;
@@ -483,6 +532,7 @@
         }
         document.getElementById('screenTeams').classList.add('hidden');
         document.getElementById('screenGrade').classList.remove('hidden');
+        window.scrollTo(0, 0);
         updateBackButton();
     }
 
@@ -501,6 +551,7 @@
             btn.innerHTML = `<i class="fas ${u.icon}"></i><span>${u.name}</span>`;
             btn.onclick = () => startCompetition(u); grid.appendChild(btn);
         });
+        window.scrollTo(0, 0);
         updateBackButton();
     }
 
@@ -517,7 +568,6 @@
         selectedUnit = unit; wordPool = [...unit.words].sort(() => Math.random() - 0.5);
         document.getElementById('screenUnits').classList.add('hidden');
         
-        // YENİ: PLACEHOLDER KONTROLÜ
         let t1Name = document.getElementById('t1Input').value.trim() || "TAKIM 1";
         if(gameMode === '1p') t1Name = document.getElementById('t1Input').value.trim() || "OYUNCU";
         
@@ -534,18 +584,20 @@
             document.getElementById('selT2Name').textContent = t2Name;
             goToSelector();
         }
+        window.scrollTo(0, 0);
         updateBackButton();
     }
 
     function goToSelector() {
         if (wordPool.length === 0) { endGame(); return; }
         hideAllScreens(); document.getElementById('screenSelector').classList.remove('hidden');
+        window.scrollTo(0, 0);
         const btn = document.getElementById('btnReveal');
         btn.disabled = true; btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Kura Çekiliyor...`; btn.style.background = "#94a3b8";
         
         let counter = 0; clearInterval(rollInterval); 
         rollInterval = setInterval(() => {
-            soundFX.roll();
+            playSafeSound('roll');
             document.getElementById('animNum1').textContent = Math.floor(Math.random() * t1Size) + 1;
             document.getElementById('animNum2').textContent = Math.floor(Math.random() * t2Size) + 1;
             counter++;
@@ -565,6 +617,7 @@
     function startActualGame() {
         if (wordPool.length === 0) { endGame(); return; }
         hideAllScreens(); document.getElementById('screenGame').classList.remove('hidden');
+        window.scrollTo(0, 0);
         
         if (gameMode === '2p') {
             document.getElementById('badge1').textContent = `Oyuncu #${currentP1}`;
@@ -574,7 +627,7 @@
         isRoundActive = true; currentWord = wordPool.pop();
         isGoldenQuestion = Math.random() < 0.15;
         const gameContainer = document.getElementById('screenGame');
-        if(isGoldenQuestion) { gameContainer.classList.add('golden-question'); soundFX.golden(); } 
+        if(isGoldenQuestion) { gameContainer.classList.add('golden-question'); playSafeSound('golden'); } 
         else { gameContainer.classList.remove('golden-question'); }
 
         document.getElementById('wordText').textContent = currentWord.e;
@@ -592,7 +645,7 @@
                 if (!isRoundActive) return; 
                 let botWillBeCorrect = Math.random() < 0.75;
                 let selectedVal = botWillBeCorrect ? currentWord.t : opts.find(o => o !== currentWord.t);
-                check(2, null, selectedVal); // YENİ: Bot kendi seçtiği cevabı tıklamış gibi yapar
+                check(2, null, selectedVal); 
             }, botThinkTime);
         }
         updateBackButton();
@@ -611,7 +664,6 @@
         });
     }
 
-    // YENİ: DYNAMIC ISLAND GÖSTERİM FONKSİYONU
     function showDynamicIsland(isCorrect, isGolden) {
         clearTimeout(islandTimeout);
         const di = document.getElementById('dynamicIsland');
@@ -627,7 +679,6 @@
             diText.innerHTML = `<i class="fas fa-times-circle" style="color:#f87171"></i> MeBot Yanlış Yaptı! <span style="color:#f87171">(-5)</span>`;
         }
 
-        // Animasyonu tetiklemek için reflow zorluyoruz
         void di.offsetWidth;
 
         diFill.style.transition = 'width 1.5s linear';
@@ -636,42 +687,50 @@
         islandTimeout = setTimeout(() => { di.classList.add('hidden-island'); }, 1500);
     }
 
+    // YENİ: HATA AFFETMEYEN (KUSURSUZ) CEVAP KONTROL FONKSİYONU
     function check(teamId, btn, val) {
         if (!isRoundActive) return;
-        isRoundActive = false; clearTimeout(aiTimer); 
+        isRoundActive = false; 
+        clearTimeout(aiTimer); 
 
+        // Oyun skoru ve havuz mantığı
         if (val === currentWord.t) {
             if(btn) btn.classList.add('correct'); 
-            soundFX.correct();
+            playSafeSound('correct');
             scores[teamId - 1] += isGoldenQuestion ? 30 : 10;
-            
             if(teamId === 2 && gameMode === '1p') showDynamicIsland(true, isGoldenQuestion);
-
-            updateScores();
-            roundTimeout = setTimeout(() => { if (gameMode === '1p') startActualGame(); else goToSelector(); }, 1500);
         } else {
             if(btn) btn.classList.add('wrong'); 
-            soundFX.wrong();
+            playSafeSound('wrong');
             scores[teamId - 1] -= 5;
-            
             if(teamId === 2 && gameMode === '1p') showDynamicIsland(false, isGoldenQuestion);
-
-            updateScores();
             wordPool.unshift(currentWord); 
-            roundTimeout = setTimeout(() => { if (gameMode === '1p') startActualGame(); else goToSelector(); }, 1500);
         }
+
+        updateScores();
+        
+        // Asla donmasın diye try-catch içinde yönlendirme
+        roundTimeout = setTimeout(() => { 
+            try {
+                if (gameMode === '1p') startActualGame(); 
+                else goToSelector(); 
+            } catch(e) {
+                console.error("Geçişte Hata, Yeniden Yükleniyor:", e);
+                fullReset(); // Çok düşük ihtimalle hata verirse bile ekranı temizlesin donmasın
+            }
+        }, 1500);
     }
 
     function updateScores() {
         document.getElementById('score1').textContent = scores[0];
         document.getElementById('score2').textContent = scores[1];
-        // YENİ: 1P MODU İÇİN ÜST SKOR TABELASINI GÜNCELLE
         document.getElementById('ts1-score').textContent = scores[0];
         document.getElementById('ts2-score').textContent = scores[1];
     }
 
     function endGame() {
         hideAllScreens(); document.getElementById('screenResult').classList.remove('hidden');
+        window.scrollTo(0, 0);
         const t1 = document.getElementById('t1Input').value.trim() || (gameMode === '1p' ? "OYUNCU" : "TAKIM 1");
         const t2 = gameMode === '1p' ? "🤖 MeBot" : (document.getElementById('t2Input').value.trim() || "TAKIM 2");
         let winnerText = "";
@@ -683,7 +742,7 @@
     }
 
     function startConfetti() {
-        soundFX.correct(); setTimeout(soundFX.correct, 200);
+        playSafeSound('correct'); setTimeout(()=> playSafeSound('correct'), 200);
         const colors = ["#ef4444", "#3b82f6", "#0d9488", "#f59e0b"];
         for(let i=0; i<60; i++) {
             const c = document.createElement('div'); c.className = 'confetti';
