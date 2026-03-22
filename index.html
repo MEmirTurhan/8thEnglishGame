@@ -38,34 +38,73 @@
         #splash-screen.hidden-splash { opacity: 0; visibility: hidden; }
         @keyframes pulseLogo { 0%, 100% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.05); opacity: 0.9; } }
 
-        /* HEADER */
+        /* YENİ: HOŞGELDİN EKRANI (ÇAPRAZ BÖLÜNMÜŞ TASARIM) */
+        #screenWelcome {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            background: var(--bg-body); z-index: 9000;
+            display: flex; transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        #screenWelcome.hidden-welcome { opacity: 0; visibility: hidden; transform: scale(1.05); pointer-events: none; }
+        
+        .welcome-left {
+            flex: 1; background: linear-gradient(135deg, var(--primary) 0%, #0f766e 100%);
+            /* Çapraz kesim efekti */
+            clip-path: polygon(0 0, 100% 0, 85% 100%, 0% 100%);
+            display: flex; justify-content: center; align-items: center;
+        }
+        .book-img {
+            max-width: 60%; max-height: 60%; object-fit: contain; filter: drop-shadow(0 20px 30px rgba(0,0,0,0.3));
+            animation: floatAnim 4s ease-in-out infinite;
+        }
+        @keyframes floatAnim { 0%, 100% { transform: translateY(0) rotate(0deg); } 50% { transform: translateY(-20px) rotate(2deg); } }
+
+        .welcome-right {
+            flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 40px; position: relative;
+        }
+        .welcome-title { font-size: 56px; font-weight: 900; color: var(--text-main); margin-bottom: 30px; opacity: 0; animation: slideUp 1s cubic-bezier(0.16, 1, 0.3, 1) 0.5s forwards; }
+        .welcome-subtitle { font-size: 18px; color: var(--text-sub); margin-bottom: 40px; font-weight: 500; opacity: 0; animation: slideUp 1s cubic-bezier(0.16, 1, 0.3, 1) 0.7s forwards; text-align: center;}
+        
+        .welcome-buttons { display: flex; flex-direction: column; gap: 15px; width: 100%; max-width: 350px; opacity: 0; animation: slideUp 1s cubic-bezier(0.16, 1, 0.3, 1) 0.9s forwards; }
+        .btn-welcome { padding: 18px 30px; border-radius: 16px; font-size: 18px; font-weight: 800; cursor: pointer; border: none; transition: 0.3s; display: flex; justify-content: center; align-items: center; gap: 10px; }
+        .btn-start-game { background: var(--primary); color: white; box-shadow: 0 10px 25px rgba(13, 148, 136, 0.3); }
+        .btn-start-game:hover { transform: translateY(-3px); box-shadow: 0 15px 30px rgba(13, 148, 136, 0.4); }
+        .btn-tubitak { background: transparent; color: var(--text-main); border: 2px solid var(--border); }
+        .btn-tubitak:hover { border-color: var(--primary); color: var(--primary); transform: translateY(-2px); }
+        
+        .welcome-signature { position: absolute; bottom: 20px; font-size: 14px; font-weight: 600; color: var(--text-sub); opacity: 0.6; }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* TÜBİTAK MODAL */
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.6); z-index: 10000; display: flex; justify-content: center; align-items: center; backdrop-filter: blur(5px); transition: 0.3s; }
+        .modal-overlay.hidden { opacity: 0; visibility: hidden; }
+        .modal-content { background: var(--bg-card); padding: 40px; border-radius: 24px; max-width: 500px; width: 90%; text-align: center; box-shadow: 0 20px 50px rgba(0,0,0,0.2); transform: translateY(0); transition: 0.3s; border: 2px solid var(--border); }
+        .modal-overlay.hidden .modal-content { transform: translateY(50px); }
+        .modal-title { font-size: 24px; font-weight: 800; color: var(--primary); margin-bottom: 20px; }
+        .modal-text { font-size: 16px; color: var(--text-main); line-height: 1.6; margin-bottom: 30px; text-align: left;}
+
+        /* HEADER & DİĞERLERİ */
         header { background: var(--bg-card); padding: 15px 40px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 20px rgba(0,0,0,0.05); border-bottom: 1px solid var(--border); z-index: 50; }
         .logo-area { display: flex; align-items: center; gap: 15px; }
         .logo { font-size: 26px; font-weight: 800; color: var(--primary); display: flex; align-items: center; gap: 12px; }
         .controls { display: flex; gap: 12px; align-items: center; }
         .control-btn { background: var(--bg-body); border: 1px solid var(--border); padding: 10px 18px; border-radius: 12px; cursor: pointer; display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 14px; color: var(--text-main); user-select: none; transition: 0.2s; }
         .control-btn:hover { border-color: var(--primary); transform: translateY(-2px); }
-
         #btnBack { background: var(--t2-bg); border-color: var(--t2-color); color: var(--t2-color); padding: 10px 15px; }
         #btnBack:hover { background: var(--t2-color); color: white; transform: translateX(-3px); }
 
-        /* CONTAINER & CARDS */
         .container { flex: 1; display: flex; flex-direction: column; width: 100%; position: relative; }
         .card { background: var(--bg-card); border-radius: 24px; padding: 40px; margin: 40px auto; max-width: 1000px; width: 90%; box-shadow: 0 10px 30px rgba(0,0,0,0.04); border: 1px solid var(--border); text-align: center; }
 
-        /* BÜYÜK BUTONLAR */
         .big-selection-grid { display: flex; gap: 30px; justify-content: center; margin-top: 30px; flex-wrap: wrap; }
         .grade-selection-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 30px; }
         .big-btn { flex: 1; min-width: 250px; padding: 30px 20px; background: var(--bg-body); border: 2px solid var(--border); border-radius: 20px; font-size: 22px; font-weight: 800; color: var(--text-main); cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 15px; transition: 0.3s; }
         .big-btn i { font-size: 48px; color: var(--primary); }
         .big-btn:hover { border-color: var(--primary); transform: translateY(-5px); box-shadow: 0 10px 20px rgba(13, 148, 136, 0.15); }
 
-        /* TEAM SETUP */
         .team-setup-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-bottom: 30px; }
         .input-wrapper label { display: block; margin-bottom: 8px; font-weight: 800; }
         .input-wrapper input { width: 100%; padding: 15px; border-radius: 12px; border: 2px solid var(--border); background: var(--bg-body); color: var(--text-main); font-weight: 700; font-size: 16px; }
 
-        /* KURA VE OYUN EKRANI STİLLERİ */
         #screenSelector { display: flex; flex-direction: column; align-items: center; justify-content: center; height: calc(100vh - 80px); width: 100%; background: var(--bg-body); }
         .selector-box { display: flex; gap: 50px; margin-bottom: 40px; justify-content: center; flex-wrap: wrap; }
         .player-card { background: var(--bg-card); border: 2px solid var(--border); border-radius: 30px; padding: 30px; width: 300px; text-align: center; box-shadow: 0 15px 40px rgba(0,0,0,0.1); position: relative; }
@@ -83,41 +122,25 @@
         .score-display { font-size: 60px; font-weight: 900; line-height: 1; }
         .active-player-badge { background: var(--text-main); color: var(--bg-body); padding: 5px 15px; border-radius: 20px; font-weight: 800; font-size: 18px; display: inline-block; margin-top: 5px; }
 
-        /* 1P (BOT) MODU ÖZEL TASARIMLARI (PC İÇİN) */
         #screenGame.mode-1p .team-2-zone { display: none !important; }
         #screenGame.mode-1p .team-1-zone { width: 100% !important; border-right: none !important; padding-top: 120px; }
         #screenGame.mode-1p .team-header { display: none; } 
         
-        /* BOT MODU İÇİN MİNİ SKOR TABELASI (SOL ÜST) */
-        .top-scoreboard-1p {
-            position: absolute; top: 20px; left: 20px; background: var(--bg-card);
-            border: 2px solid var(--border); padding: 10px 20px; border-radius: 20px;
-            font-weight: 800; display: flex; gap: 20px; z-index: 5;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.05); align-items: center;
-        }
+        .top-scoreboard-1p { position: absolute; top: 20px; left: 20px; background: var(--bg-card); border: 2px solid var(--border); padding: 10px 20px; border-radius: 20px; font-weight: 800; display: flex; gap: 20px; z-index: 5; box-shadow: 0 5px 15px rgba(0,0,0,0.05); align-items: center; }
         .top-scoreboard-1p span.p1-sc { color: var(--t1-color); font-size: 18px; }
         .top-scoreboard-1p span.bot-sc { color: var(--t2-color); font-size: 18px; }
 
-        /* DYNAMIC ISLAND (APPLE STİLİ MÜKEMMEL HAP TASARIMI) */
-        .dynamic-island {
-            position: fixed; top: 15px; left: 50%; transform: translateX(-50%);
-            background: #000000; color: #ffffff; border-radius: 40px;
-            padding: 12px 25px; display: flex; flex-direction: column; align-items: center;
-            min-width: 220px; z-index: 10000;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-            transition: all 0.5s cubic-bezier(0.68, -0.55, 0.27, 1.55); 
-            overflow: hidden; opacity: 1;
-        }
-        .dynamic-island.hidden-island {
-            top: -100px; opacity: 0; transform: translate(-50%, 0) scale(0.7); pointer-events: none;
-        }
+        .dynamic-island { position: fixed; top: 15px; left: 50%; transform: translateX(-50%); background: #000000; color: #ffffff; border-radius: 40px; padding: 12px 25px; display: flex; flex-direction: column; align-items: center; min-width: 220px; z-index: 10000; box-shadow: 0 10px 30px rgba(0,0,0,0.5); transition: all 0.5s cubic-bezier(0.68, -0.55, 0.27, 1.55); overflow: hidden; opacity: 1; }
+        .dynamic-island.hidden-island { top: -100px; opacity: 0; transform: translate(-50%, 0) scale(0.7); pointer-events: none; }
         .di-content { display: flex; align-items: center; gap: 10px; font-weight: 600; font-size: 15px; white-space: nowrap; }
         .di-progress-bar { width: 100%; height: 3px; background: rgba(255,255,255,0.2); margin-top: 10px; border-radius: 3px; overflow: hidden; }
         .di-progress-fill { height: 100%; background: #ffffff; width: 100%; transform-origin: left; }
 
-        /* KELİME KUTUSU (PC İÇİN) */
-        .central-word-container { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 50; background: #0f172a; color: white; padding: 25px 50px; border-radius: 20px; font-size: 42px; font-weight: 800; box-shadow: 0 20px 50px rgba(0,0,0,0.3); text-transform: uppercase; border: 4px solid var(--bg-card); text-align: center; transition: 0.3s; }
+        .combo-popup { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0); background: linear-gradient(135deg, #ff416c 0%, #ff4b2b 100%); color: white; padding: 20px 50px; border-radius: 25px; font-size: 42px; font-weight: 900; z-index: 10001; box-shadow: 0 20px 50px rgba(255, 75, 43, 0.6); pointer-events: none; text-transform: uppercase; border: 4px solid #fff; text-align: center; line-height: 1.2; }
+        .combo-anim { animation: comboPop 1.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
+        @keyframes comboPop { 0% { transform: translate(-50%, -50%) scale(0) rotate(-10deg); opacity: 0; } 20% { transform: translate(-50%, -50%) scale(1.1) rotate(5deg); opacity: 1; } 40% { transform: translate(-50%, -50%) scale(1) rotate(0deg); opacity: 1; } 80% { transform: translate(-50%, -50%) scale(1) rotate(0deg); opacity: 1; } 100% { transform: translate(-50%, -100%) scale(1.2); opacity: 0; } }
 
+        .central-word-container { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 50; background: #0f172a; color: white; padding: 25px 50px; border-radius: 20px; font-size: 42px; font-weight: 800; box-shadow: 0 20px 50px rgba(0,0,0,0.3); text-transform: uppercase; border: 4px solid var(--bg-card); text-align: center; transition: 0.3s; }
         .golden-question .central-word-container { background: linear-gradient(135deg, #b45309 0%, #f59e0b 50%, #fbbf24 100%); border-color: #fcd34d; box-shadow: 0 0 50px rgba(245, 158, 11, 0.6); animation: goldPulse 1.5s infinite; }
         @keyframes goldPulse { 0% { transform: translate(-50%, -50%) scale(1); } 50% { transform: translate(-50%, -50%) scale(1.05); } 100% { transform: translate(-50%, -50%) scale(1); } }
         .golden-tag { display: none; position: absolute; top: -20px; left: 50%; transform: translateX(-50%); background: #ef4444; color: white; padding: 5px 15px; border-radius: 20px; font-size: 14px; font-weight: 800; white-space: nowrap; border: 2px solid white; }
@@ -139,10 +162,13 @@
         .confetti { position: absolute; width: 10px; height: 10px; top: -10px; border-radius: 50%; animation: fall 3s linear forwards; z-index: 100; }
         @keyframes fall { to { transform: translateY(100vh) rotate(360deg); opacity: 0; } }
 
-        .signature { position: fixed; bottom: 15px; right: 20px; font-size: 13px; font-weight: 500; color: var(--text-sub); letter-spacing: 0.5px; opacity: 0.6; z-index: 100; pointer-events: none; }
-
-        /* MOBİL UYUMLULUK (KUSURSUZ DİZİLİM VE MERKEZLEME) */
+        /* MOBİL UYUMLULUK */
         @media (max-width: 768px) {
+            /* Karşılama Ekranı Mobilde Alt Alta Çapraz */
+            #screenWelcome { flex-direction: column; }
+            .welcome-left { clip-path: polygon(0 0, 100% 0, 100% 85%, 0 100%); flex: 0.6; }
+            .welcome-title { font-size: 40px; }
+            
             header { padding: 10px 15px; flex-direction: column; gap: 10px; }
             .logo-area { width: 100%; justify-content: center; position: relative; }
             #btnBack { position: absolute; left: 0; }
@@ -151,34 +177,13 @@
             .grade-selection-grid { grid-template-columns: 1fr; }
             .big-selection-grid { flex-direction: column; }
             .team-setup-grid { grid-template-columns: 1fr; gap: 15px; }
-
-            /* SKOR TABELASI MOBİL (1P) */
-            .top-scoreboard-1p {
-                position: relative !important; top: 0 !important; left: 0 !important; 
-                margin-bottom: 20px; width: 100%; justify-content: center;
-            }
+            .top-scoreboard-1p { position: relative !important; top: 0 !important; left: 0 !important; margin-bottom: 20px; width: 100%; justify-content: center; }
             
-            /* 1P MODU MOBİL DİZİLİMİ */
-            #screenGame.mode-1p { 
-                display: flex; flex-direction: column; 
-                justify-content: flex-start; align-items: center;
-                padding: 15px; height: auto; min-height: calc(100vh - 80px); 
-            }
-            
-            /* KELİME KUTUSU */
-            #screenGame.mode-1p .central-word-container { 
-                position: relative; top: auto; left: auto; transform: none; 
-                width: 100%; margin-bottom: 25px; font-size: 32px; 
-                padding: 20px; order: 1; box-shadow: 0 10px 20px rgba(0,0,0,0.1);
-            }
-
-            #screenGame.mode-1p .team-1-zone { 
-                width: 100%; padding: 0; order: 2; justify-content: flex-start; 
-            }
-            
+            #screenGame.mode-1p { display: flex; flex-direction: column; justify-content: flex-start; align-items: center; padding: 15px; height: auto; min-height: calc(100vh - 80px); }
+            #screenGame.mode-1p .central-word-container { position: relative; top: auto; left: auto; transform: none; width: 100%; margin-bottom: 25px; font-size: 32px; padding: 20px; order: 1; box-shadow: 0 10px 20px rgba(0,0,0,0.1); }
+            #screenGame.mode-1p .team-1-zone { width: 100%; padding: 0; order: 2; justify-content: flex-start; }
             #screenGame.mode-1p .options-column { margin-top: 0; width: 100%; }
 
-            /* 2P MODU MOBİL DİZİLİMİ */
             #screenGame:not(.mode-1p) { display: flex; flex-direction: column; justify-content: flex-start; padding: 10px; height: auto; min-height: 100vh; }
             #screenGame:not(.mode-1p) .central-word-container { position: relative; top: auto; left: auto; transform: none; width: 95%; margin: 15px auto; order: 2; padding: 15px; font-size: 28px; }
             #screenGame:not(.mode-1p) .team-2-zone { order: 1; border-bottom: 2px dashed var(--border); padding-bottom: 15px; }
@@ -188,17 +193,46 @@
             .team-header { position: relative; top: 0; margin-bottom: 10px; }
             .score-display { font-size: 40px; margin-bottom: 5px; }
             .opt-btn { padding: 15px; font-size: 16px; }
-            .signature { position: relative; bottom: auto; right: auto; text-align: center; margin-top: 20px; padding-bottom: 15px; display: block; }
+            .combo-popup { font-size: 32px; padding: 15px 30px; }
         }
     </style>
 </head>
 <body>
 
-<div class="signature">Designed by Muhammed Emir Turhan</div>
-
 <audio id="bgMusic" loop><source src="lofi-bg.mp3" type="audio/mpeg"></audio>
 
 <div id="splash-screen"><img src="image.png" alt="Me Games English" class="splash-logo"></div>
+
+<div id="screenWelcome">
+    <div class="welcome-left">
+        <img src="kitap.png" alt="English Book" class="book-img">
+    </div>
+    <div class="welcome-right">
+        <h1 class="welcome-title">Hoşgeldiniz</h1>
+        <p class="welcome-subtitle">Eğlenerek öğrenmeye hazır mısın?</p>
+        
+        <div class="welcome-buttons">
+            <button class="btn-welcome btn-start-game" onclick="startGameFromWelcome()">
+                Oyuna Başla <i class="fas fa-play"></i>
+            </button>
+            <button class="btn-welcome btn-tubitak" onclick="openTubitakModal()">
+                TÜBİTAK Projemizin Amacı <i class="fas fa-microscope"></i>
+            </button>
+        </div>
+
+        <div class="welcome-signature">Muhammed Emir Turhan</div>
+    </div>
+</div>
+
+<div id="tubitakModal" class="modal-overlay hidden">
+    <div class="modal-content">
+        <h2 class="modal-title"><i class="fas fa-lightbulb"></i> Proje Amacımız</h2>
+        <p class="modal-text">
+            Bu projenin amacı, İngilizce kelime öğrenimini sıradan bir ezber süreci olmaktan çıkarıp; rekabetçi, eğlenceli ve teknolojiyle iç içe bir oyun deneyimine dönüştürmektir. Sınıf içi etkileşimi artırarak kalıcı öğrenmeyi hedefler.
+        </p>
+        <button class="btn-main" onclick="closeTubitakModal()" style="width: 100%;">Anladım, Kapat</button>
+    </div>
+</div>
 
 <header>
     <div class="logo-area">
@@ -216,7 +250,6 @@
 </header>
 
 <div class="container">
-    
     <div id="screenDevice" class="card">
         <h1>Cihazını Seç</h1>
         <p style="color:var(--text-sub);">Hangi platformdan bağlanıyorsun?</p>
@@ -303,9 +336,7 @@
     try {
         const AudioContext = window.AudioContext || window.webkitAudioContext;
         if (AudioContext) audioCtx = new AudioContext();
-    } catch(e) {
-        console.warn("Cihaz ses altyapısını desteklemiyor, sessiz modda devam edilecek.");
-    }
+    } catch(e) {}
     
     let isSoundOn = true;
 
@@ -313,10 +344,7 @@
         if (!isSoundOn || !audioCtx) return;
         setTimeout(() => {
             try {
-                if (audioCtx.state === 'suspended') {
-                    let p = audioCtx.resume();
-                    if(p !== undefined) p.catch(e=>{});
-                }
+                if (audioCtx.state === 'suspended') { let p = audioCtx.resume(); if(p !== undefined) p.catch(e=>{}); }
                 let freq = 400, wave = 'sine', duration = 0.1, vol = 0.1;
                 
                 if(type === 'click') { freq = 400; wave = 'sine'; duration = 0.1; vol = 0.1; }
@@ -327,6 +355,9 @@
                 else if(type === 'golden_2') { freq = 554; wave = 'sine'; duration = 0.5; vol = 0.1; setTimeout(()=> playSafeSound('golden_3'), 100); }
                 else if(type === 'golden_3') { freq = 659; wave = 'sine'; duration = 0.8; vol = 0.1; }
                 else if(type === 'roll') { freq = 800; wave = 'triangle'; duration = 0.05; vol = 0.05; }
+                else if(type === 'combo') { freq = 400; wave = 'square'; duration = 0.1; vol = 0.1; setTimeout(()=> playSafeSound('combo_2'), 100); }
+                else if(type === 'combo_2') { freq = 500; wave = 'square'; duration = 0.1; vol = 0.1; setTimeout(()=> playSafeSound('combo_3'), 100); }
+                else if(type === 'combo_3') { freq = 800; wave = 'square'; duration = 0.3; vol = 0.1; }
 
                 const osc = audioCtx.createOscillator();
                 const gain = audioCtx.createGain();
@@ -342,59 +373,40 @@
         }, 0);
     }
 
-    function toggleSound() {
-        isSoundOn = !isSoundOn; document.querySelector('#btnSound i').className = isSoundOn ? "fas fa-volume-up" : "fas fa-volume-mute";
-    }
-
+    function toggleSound() { isSoundOn = !isSoundOn; document.querySelector('#btnSound i').className = isSoundOn ? "fas fa-volume-up" : "fas fa-volume-mute"; }
     function toggleFullScreen() {
-        if (!document.fullscreenElement) {
-            document.documentElement.requestFullscreen().catch(err => {});
-            document.querySelector('#btnFullscreen i').className = "fas fa-compress";
-        } else {
-            if (document.exitFullscreen) { document.exitFullscreen(); document.querySelector('#btnFullscreen i').className = "fas fa-expand"; }
-        }
+        if (!document.fullscreenElement) { document.documentElement.requestFullscreen().catch(err => {}); document.querySelector('#btnFullscreen i').className = "fas fa-compress"; } 
+        else { if (document.exitFullscreen) { document.exitFullscreen(); document.querySelector('#btnFullscreen i').className = "fas fa-expand"; } }
     }
 
-    // --- FULL MEB KELİME HAVUZLARI ---
-    const grade5Units = [
-        { id: 1, name: "Hello!", icon: "fa-hand-paper", words: [{e:"Country", t:"Ülke"}, {e:"Flag", t:"Bayrak"}, {e:"Language", t:"Dil"}, {e:"Meet", t:"Tanışmak"}, {e:"Glad", t:"Memnun"}, {e:"Introduce", t:"Tanıtmak"}, {e:"Spell", t:"Hecelemek"}, {e:"Nationality", t:"Milliyet"}, {e:"Secondary school", t:"Ortaokul"}, {e:"Greeting", t:"Selamlama"}] },
-        { id: 2, name: "My Town", icon: "fa-city", words: [{e:"Bakery", t:"Fırın"}, {e:"Barber", t:"Berber"}, {e:"Butcher", t:"Kasap"}, {e:"Library", t:"Kütüphane"}, {e:"Mosque", t:"Cami"}, {e:"Pharmacy", t:"Eczane"}, {e:"Toy shop", t:"Oyuncakçı"}, {e:"Opposite", t:"Karşısında"}, {e:"Behind", t:"Arkasında"}, {e:"Between", t:"Arasında"}] },
-        { id: 3, name: "Games and Hobbies", icon: "fa-puzzle-piece", words: [{e:"Blindman's buff", t:"Körebe"}, {e:"Checkers", t:"Dama"}, {e:"Chess", t:"Satranç"}, {e:"Dodgeball", t:"Yakan top"}, {e:"Hopscotch", t:"Seksek"}, {e:"Tag", t:"Ebelemece"}, {e:"Hide and seek", t:"Saklambaç"}, {e:"Puzzle", t:"Yapboz"}, {e:"Collect stamps", t:"Pul biriktirmek"}, {e:"Ride a bike", t:"Bisiklete binmek"}] },
-        { id: 4, name: "My Daily Routine", icon: "fa-clock", words: [{e:"Brush teeth", t:"Diş fırçalamak"}, {e:"Comb hair", t:"Saç taramak"}, {e:"Get dressed", t:"Giyinmek"}, {e:"Get up", t:"Kalkmak"}, {e:"Have breakfast", t:"Kahvaltı yapmak"}, {e:"Wash face", t:"Yüz yıkamak"}, {e:"Arrive", t:"Varmak"}, {e:"Leave", t:"Ayrılmak"}, {e:"Do homework", t:"Ödev yapmak"}, {e:"Go to bed", t:"Yatmak"}] },
-        { id: 5, name: "Health", icon: "fa-heartbeat", words: [{e:"Backache", t:"Sırt ağrısı"}, {e:"Cold", t:"Soğuk algınlığı"}, {e:"Cough", t:"Öksürük"}, {e:"Earache", t:"Kulak ağrısı"}, {e:"Fever", t:"Ateş"}, {e:"Measles", t:"Kızamık"}, {e:"Runny nose", t:"Burun akıntısı"}, {e:"Sore throat", t:"Boğaz ağrısı"}, {e:"Toothache", t:"Diş ağrısı"}, {e:"Medicine", t:"İlaç"}] },
-        { id: 6, name: "Movies", icon: "fa-film", words: [{e:"Animation", t:"Animasyon"}, {e:"Comedy", t:"Komedi"}, {e:"Documentary", t:"Belgesel"}, {e:"Sci-fi", t:"Bilim kurgu"}, {e:"Brave", t:"Cesur"}, {e:"Evil", t:"Kötü"}, {e:"Exciting", t:"Heyecan verici"}, {e:"Frightening", t:"Korkutucu"}, {e:"Funny", t:"Komik"}, {e:"Boring", t:"Sıkıcı"}] },
-        { id: 7, name: "Party Time", icon: "fa-birthday-cake", words: [{e:"Balloon", t:"Balon"}, {e:"Beverage", t:"İçecek"}, {e:"Candle", t:"Mum"}, {e:"Clown", t:"Palyaço"}, {e:"Decoration", t:"Süsleme"}, {e:"Guest", t:"Misafir"}, {e:"Host", t:"Ev sahibi"}, {e:"Invitation", t:"Davetiye"}, {e:"Present", t:"Hediye"}, {e:"Order", t:"Sipariş vermek"}] },
-        { id: 8, name: "Fitness", icon: "fa-dumbbell", words: [{e:"Cycling", t:"Bisiklete binme"}, {e:"Hiking", t:"Doğa yürüyüşü"}, {e:"Jogging", t:"Tempolu koşu"}, {e:"Workout", t:"Antrenman"}, {e:"Push-up", t:"Şınav"}, {e:"Sit-up", t:"Mekik"}, {e:"Weightlifting", t:"Halter"}, {e:"Ice skating", t:"Buz pateni"}, {e:"Skiing", t:"Kayak"}, {e:"Exercise", t:"Egzersiz"}] },
-        { id: 9, name: "Animal Shelter", icon: "fa-dog", words: [{e:"Adopt", t:"Sahiplenmek"}, {e:"Bark", t:"Havlamak"}, {e:"Bite", t:"Isırmak"}, {e:"Feed", t:"Beslemek"}, {e:"Examine", t:"Muayene etmek"}, {e:"Protect", t:"Korumak"}, {e:"Puppy", t:"Köpek yavrusu"}, {e:"Kitten", t:"Kedi yavrusu"}, {e:"Vet", t:"Veteriner"}, {e:"Wing", t:"Kanat"}] },
-        { id: 10, name: "Festivals", icon: "fa-fireworks", words: [{e:"Celebrate", t:"Kutlamak"}, {e:"Children's Day", t:"Çocuk Bayramı"}, {e:"Festival", t:"Festival"}, {e:"Independence", t:"Bağımsızlık"}, {e:"Parade", t:"Geçit töreni"}, {e:"Performance", t:"Gösteri"}, {e:"Poem", t:"Şiir"}, {e:"Traditional", t:"Geleneksel"}, {e:"Republic", t:"Cumhuriyet"}, {e:"National", t:"Ulusal"}] }
-    ];
+    // YENİ: EKRAN YÜKLENDİĞİNDE YAPILACAKLAR (SPLASH -> HOŞGELDİN EKRANI)
+    window.addEventListener('load', () => {
+        setTimeout(() => { 
+            document.getElementById('splash-screen').classList.add('hidden-splash'); 
+            // 2 saniye sonra splash kaybolacak, arkasında duran "screenWelcome" jilet gibi ortaya çıkacak.
+        }, 2000);
+        document.body.addEventListener('click', (e) => { if(e.target.tagName === 'BUTTON' || e.target.closest('.control-btn')) playSafeSound('click'); });
+        updateBackButton();
+    });
 
-    const grade6Units = [
-        { id: 1, name: "Life", icon: "fa-sun", words: [{e:"Rest", t:"Dinlenmek"}, {e:"Take a nap", t:"Şekerleme yapmak"}, {e:"Attend", t:"Katılmak"}, {e:"Traditional", t:"Geleneksel"}, {e:"Diary", t:"Günlük"}, {e:"Run errands", t:"Ayak işleri yapmak"}, {e:"Relative", t:"Akraba"}, {e:"Visit", t:"Ziyaret etmek"}, {e:"Busy", t:"Meşgul"}, {e:"Take care", t:"İlgilenmek"}] },
-        { id: 2, name: "Yummy Breakfast", icon: "fa-bread-slice", words: [{e:"Bagel", t:"Simit"}, {e:"Butter", t:"Tereyağı"}, {e:"Cereal", t:"Mısır gevreği"}, {e:"Cheese", t:"Peynir"}, {e:"Croissant", t:"Kruvasan"}, {e:"Honey", t:"Bal"}, {e:"Jam", t:"Reçel"}, {e:"Nutritious", t:"Besleyici"}, {e:"Pancake", t:"Krep"}, {e:"Sausage", t:"Sosis"}] },
-        { id: 3, name: "Downtown", icon: "fa-city", words: [{e:"Crowded", t:"Kalabalık"}, {e:"Kiosk", t:"Büfe"}, {e:"Skyscraper", t:"Gökdelen"}, {e:"Street", t:"Sokak"}, {e:"Traffic jam", t:"Trafik sıkışıklığı"}, {e:"Noisy", t:"Gürültülü"}, {e:"Quiet", t:"Sessiz"}, {e:"Hometown", t:"Memleket"}, {e:"Neighborhood", t:"Mahalle"}, {e:"Rent", t:"Kiralamak"}] },
-        { id: 4, name: "Weather & Emotions", icon: "fa-cloud-sun", words: [{e:"Cloudy", t:"Bulutlu"}, {e:"Foggy", t:"Sisli"}, {e:"Freezing", t:"Dondurucu"}, {e:"Hail", t:"Dolu"}, {e:"Lightning", t:"Şimşek"}, {e:"Stormy", t:"Fırtınalı"}, {e:"Anxious", t:"Endişeli"}, {e:"Moody", t:"Huysuz"}, {e:"Scared", t:"Korkmuş"}, {e:"Sleepy", t:"Uykulu"}] },
-        { id: 5, name: "At the Fair", icon: "fa-ticket-alt", words: [{e:"Bumper cars", t:"Çarpışan arabalar"}, {e:"Carousel", t:"Atlıkarınca"}, {e:"Ferris wheel", t:"Dönme dolap"}, {e:"Roller coaster", t:"Hız treni"}, {e:"Ghost train", t:"Korku treni"}, {e:"Carnival", t:"Karnaval"}, {e:"Thrilling", t:"Heyecan verici"}, {e:"Dull", t:"Sıkıcı"}, {e:"Terrifying", t:"Korkutucu"}, {e:"Fun ride", t:"Eğlence treni"}] },
-        { id: 6, name: "Occupations", icon: "fa-briefcase", words: [{e:"Architect", t:"Mimar"}, {e:"Dentist", t:"Diş hekimi"}, {e:"Engineer", t:"Mühendis"}, {e:"Hairdresser", t:"Kuaför"}, {e:"Lawyer", t:"Avukat"}, {e:"Mechanic", t:"Tamirci"}, {e:"Tailor", t:"Terzi"}, {e:"Waiter", t:"Garson"}, {e:"Defend", t:"Savunmak"}, {e:"Repair", t:"Tamir etmek"}] },
-        { id: 7, name: "Holidays", icon: "fa-umbrella-beach", words: [{e:"Seaside", t:"Deniz kenarı"}, {e:"Sightseeing", t:"Şehir turu"}, {e:"Ski resort", t:"Kayak merkezi"}, {e:"Tent", t:"Çadır"}, {e:"Tour", t:"Tur"}, {e:"Voyage", t:"Deniz yolculuğu"}, {e:"Ancient", t:"Antik"}, {e:"Pick fruit", t:"Meyve toplamak"}, {e:"Sail", t:"Yelken açmak"}, {e:"Trekking", t:"Doğa yürüyüşü"}] },
-        { id: 8, name: "Bookworms", icon: "fa-book", words: [{e:"Dictionary", t:"Sözlük"}, {e:"E-book", t:"E-kitap"}, {e:"Encyclopedia", t:"Ansiklopedi"}, {e:"Magazine", t:"Dergi"}, {e:"Novel", t:"Roman"}, {e:"Poetry", t:"Şiir"}, {e:"Author", t:"Yazar"}, {e:"Bookshelf", t:"Kitaplık"}, {e:"Literature", t:"Edebiyat"}, {e:"Look for", t:"Aramak"}] },
-        { id: 9, name: "Saving the Planet", icon: "fa-globe-americas", words: [{e:"Eco-friendly", t:"Çevre dostu"}, {e:"Environment", t:"Çevre"}, {e:"Garbage", t:"Çöp"}, {e:"Global warming", t:"Küresel ısınma"}, {e:"Litter", t:"Çöp atmak"}, {e:"Pollution", t:"Kirlilik"}, {e:"Recycle", t:"Geri dönüştürmek"}, {e:"Reduce", t:"Azaltmak"}, {e:"Reuse", t:"Yeniden kullanmak"}, {e:"Solar energy", t:"Güneş enerjisi"}] },
-        { id: 10, name: "Democracy", icon: "fa-vote-yea", words: [{e:"Candidate", t:"Aday"}, {e:"Election", t:"Seçim"}, {e:"Campaign", t:"Kampanya"}, {e:"Vote", t:"Oy vermek"}, {e:"Ballot box", t:"Seçim sandığı"}, {e:"Envelope", t:"Zarf"}, {e:"President", t:"Başkan"}, {e:"Republic", t:"Cumhuriyet"}, {e:"Rights", t:"Haklar"}, {e:"Equal", t:"Eşit"}] }
-    ];
+    // YENİ: HOŞGELDİN EKRANI BUTON İŞLEVLERİ
+    function startGameFromWelcome() {
+        playSafeSound('click');
+        document.getElementById('screenWelcome').classList.add('hidden-welcome');
+        // Zaten arkada ana menü (Cihaz Seçimi) bekliyor, geçiş çok yumuşak olacak.
+    }
 
-    const grade7Units = [
-        { id: 1, name: "Appearance", icon: "fa-user", words: [{e:"Attractive", t:"Çekici"}, {e:"Plump", t:"Balık etli"}, {e:"Well-built", t:"Yapılı"}, {e:"Punctual", t:"Dakik"}, {e:"Generous", t:"Cömert"}, {e:"Selfish", t:"Bencil"}, {e:"Outgoing", t:"Dışa dönük"}, {e:"Clumsy", t:"Sakar"}, {e:"Easygoing", t:"Uyumlu"}, {e:"Smart", t:"Zeki"}] },
-        { id: 2, name: "Sports", icon: "fa-futbol", words: [{e:"Archery", t:"Okçuluk"}, {e:"Draw", t:"Berabere"}, {e:"Indoors", t:"Kapalı alan"}, {e:"Injury", t:"Sakatlık"}, {e:"Spectator", t:"Seyirci"}, {e:"Success", t:"Başarı"}, {e:"Wrestling", t:"Güreş"}, {e:"Pitch", t:"Saha"}, {e:"Court", t:"Kort"}, {e:"Beat", t:"Yenmek"}] },
-        { id: 3, name: "Biographies", icon: "fa-book-open", words: [{e:"Award", t:"Ödül"}, {e:"Brilliant", t:"Parlak zekalı"}, {e:"Grow up", t:"Büyümek"}, {e:"Invent", t:"İcat etmek"}, {e:"Raise", t:"Yetiştirmek"}, {e:"Graduate", t:"Mezun olmak"}, {e:"Scholarship", t:"Burs"}, {e:"Career", t:"Kariyer"}, {e:"Discover", t:"Keşfetmek"}, {e:"Get married", t:"Evlenmek"}] },
-        { id: 4, name: "Wild Animals", icon: "fa-paw", words: [{e:"Carnivore", t:"Etçil"}, {e:"Herbivore", t:"Otçul"}, {e:"Extinct", t:"Nesli tükenmiş"}, {e:"Habitat", t:"Yaşam alanı"}, {e:"Mammal", t:"Memeli"}, {e:"Poisonous", t:"Zehirli"}, {e:"Prey", t:"Av"}, {e:"Reptile", t:"Sürüngen"}, {e:"Survive", t:"Hayatta kalmak"}, {e:"Species", t:"Tür"}] },
-        { id: 5, name: "Television", icon: "fa-tv", words: [{e:"Commercial", t:"Reklam"}, {e:"Director", t:"Yönetmen"}, {e:"Documentary", t:"Belgesel"}, {e:"Episode", t:"Bölüm"}, {e:"Recommend", t:"Önermek"}, {e:"Sitcom", t:"Durum komedisi"}, {e:"Soap opera", t:"Pembe dizi"}, {e:"Quiz show", t:"Bilgi yarışması"}, {e:"Couch potato", t:"Televizyon bağımlısı"}, {e:"Broadcast", t:"Yayınlamak"}] },
-        { id: 6, name: "Celebrations", icon: "fa-birthday-cake", words: [{e:"Arrange", t:"Düzenlemek"}, {e:"Attend", t:"Katılmak"}, {e:"Beverage", t:"İçecek"}, {e:"Decorate", t:"Süslemek"}, {e:"Host", t:"Ev sahibi"}, {e:"Invitation", t:"Davetiye"}, {e:"Refuse", t:"Reddetmek"}, {e:"Wrap", t:"Paketlemek"}, {e:"Throw a party", t:"Parti vermek"}, {e:"Fancy dress", t:"Kostüm"}] },
-        { id: 7, name: "Dreams", icon: "fa-cloud-moon", words: [{e:"Career", t:"Kariyer"}, {e:"Excellent", t:"Mükemmel"}, {e:"Guess", t:"Tahmin etmek"}, {e:"Peaceful", t:"Huzurlu"}, {e:"Trick", t:"Oyun/Hile"}, {e:"Probably", t:"Muhtemelen"}, {e:"Definitely", t:"Kesinlikle"}, {e:"Predict", t:"Öngörmek"}, {e:"Imagine", t:"Hayal etmek"}, {e:"Success", t:"Başarı"}] },
-        { id: 8, name: "Public Buildings", icon: "fa-building", words: [{e:"Bakery", t:"Fırın"}, {e:"Chemist", t:"Eczane"}, {e:"City hall", t:"Belediye binası"}, {e:"Fire station", t:"İtfaiye"}, {e:"Grocery", t:"Bakkal"}, {e:"Municipality", t:"Belediye"}, {e:"Police station", t:"Polis karakolu"}, {e:"Post office", t:"Postane"}, {e:"Governor", t:"Vali"}, {e:"Report", t:"Bildirmek"}] },
-        { id: 9, name: "Environment", icon: "fa-leaf", words: [{e:"Balance", t:"Denge"}, {e:"Climate", t:"İklim"}, {e:"Deforestation", t:"Ormansızlaşma"}, {e:"Destroy", t:"Yok etmek"}, {e:"Eco-friendly", t:"Çevre dostu"}, {e:"Exhaust", t:"Egzoz"}, {e:"Global warming", t:"Küresel ısınma"}, {e:"Pollution", t:"Kirlilik"}, {e:"Renewable", t:"Yenilenebilir"}, {e:"Threaten", t:"Tehdit etmek"}] },
-        { id: 10, name: "Planets", icon: "fa-globe", words: [{e:"Orbit", t:"Yörünge"}, {e:"Planet", t:"Gezegen"}, {e:"Solar system", t:"Güneş sistemi"}, {e:"Space shuttle", t:"Uzay mekiği"}, {e:"Surface", t:"Yüzey"}, {e:"Universe", t:"Evren"}, {e:"Asteroid", t:"Asteroit"}, {e:"Comets", t:"Kuyruklu yıldız"}, {e:"Evidence", t:"Kanıt"}, {e:"Explore", t:"Keşfe çıkmak"}] }
-    ];
+    function openTubitakModal() {
+        playSafeSound('click');
+        document.getElementById('tubitakModal').classList.remove('hidden');
+    }
 
+    function closeTubitakModal() {
+        playSafeSound('click');
+        document.getElementById('tubitakModal').classList.add('hidden');
+    }
+
+    // --- KELİME HAVUZLARI ---
     const grade8Units = [
         { id: 1, name: "Friendship", icon: "fa-handshake", words: [{e:"Back up", t:"Desteklemek"}, {e:"Count on", t:"Güvenmek"}, {e:"Get on well", t:"İyi geçinmek"}, {e:"Laid-back", t:"Rahat/Gamsız"}, {e:"Stubborn", t:"İnatçı"}, {e:"Buddy", t:"Kanka"}, {e:"Apologize", t:"Özür dilemek"}, {e:"Argue", t:"Tartışmak"}, {e:"Attach importance", t:"Önem vermek"}, {e:"Loyal", t:"Sadık"}] },
         { id: 2, name: "Teen Life", icon: "fa-headphones", words: [{e:"Unbearable", t:"Dayanılmaz"}, {e:"Terrific", t:"Müthiş"}, {e:"Casual", t:"Günlük (Giyim)"}, {e:"Trendy", t:"Modaya uygun"}, {e:"Campfire", t:"Kamp ateşi"}, {e:"Equipment", t:"Ekipman"}, {e:"Harmonious", t:"Uyumlu"}, {e:"Impressive", t:"Etkileyici"}, {e:"Snob", t:"Burnu havada"}, {e:"Trekking", t:"Doğa yürüyüşü"}] },
@@ -407,6 +419,9 @@
         { id: 9, name: "Science", icon: "fa-flask", words: [{e:"Test tube", t:"Deney tüpü"}, {e:"Vaccination", t:"Aşılama"}, {e:"Explosion", t:"Patlama"}, {e:"High-tech", t:"Yüksek teknoloji"}, {e:"Process", t:"Süreç"}, {e:"Cell", t:"Hücre"}, {e:"Discover", t:"Keşfetmek"}, {e:"Experiment", t:"Deney yapmak"}, {e:"Genius", t:"Dahi"}, {e:"Gravity", t:"Yerçekimi"}] },
         { id: 10, name: "Natural Forces", icon: "fa-bolt", words: [{e:"Avalanche", t:"Çığ"}, {e:"Hurricane", t:"Kasırga"}, {e:"Shortage", t:"Kıtlık"}, {e:"Global warming", t:"Küresel ısınma"}, {e:"Take precaution", t:"Önlem almak"}, {e:"Deforestation", t:"Ormansızlaşma"}, {e:"Drought", t:"Kuraklık"}, {e:"Earthquake", t:"Deprem"}, {e:"Eco-friendly", t:"Çevre dostu"}, {e:"Landslide", t:"Toprak kayması"}] }
     ];
+    const grade5Units = [{ id: 1, name: "Hello!", icon: "fa-hand-paper", words: grade8Units[0].words }];
+    const grade6Units = [{ id: 1, name: "Life", icon: "fa-sun", words: grade8Units[1].words }];
+    const grade7Units = [{ id: 1, name: "Appearance", icon: "fa-user", words: grade8Units[2].words }];
 
     // --- SİSTEM DEĞİŞKENLERİ ---
     let currentActiveUnits = grade8Units; 
@@ -419,21 +434,16 @@
     let t1Size = 15, t2Size = 15, t1Pool = [], t2Pool = [];
     let currentP1 = 0, currentP2 = 0;
     
+    let comboCount = [0, 0];
+    
     let aiTimer = null; 
     let rollInterval = null; 
     let roundTimeout = null; 
     let islandTimeout = null;
 
-    window.addEventListener('load', () => {
-        setTimeout(() => { document.getElementById('splash-screen').classList.add('hidden-splash'); }, 2000);
-        document.body.addEventListener('click', (e) => { if(e.target.tagName === 'BUTTON' || e.target.closest('.control-btn')) playSafeSound('click'); });
-        updateBackButton();
-    });
-
-    function toggleTheme() { document.body.classList.toggle('dark-mode'); }
-    
     function updateBackButton() {
         const btnBack = document.getElementById('btnBack');
+        // Welcome ekranındaysak zaten üst bar yok, orayı geçtikten sonra cihaz seçimindeysek gizle
         if (!document.getElementById('screenDevice').classList.contains('hidden')) btnBack.style.display = 'none';
         else btnBack.style.display = 'flex';
     }
@@ -452,10 +462,12 @@
         playSafeSound('click'); stopAllTimers();
 
         if (!document.getElementById('screenGame').classList.contains('hidden')) {
-            hideAllScreens(); document.getElementById('screenUnits').classList.remove('hidden'); scores = [0, 0]; updateScores();
+            hideAllScreens(); document.getElementById('screenUnits').classList.remove('hidden'); 
+            scores = [0, 0]; comboCount = [0, 0]; updateScores();
         } 
         else if (!document.getElementById('screenSelector').classList.contains('hidden')) {
-            hideAllScreens(); document.getElementById('screenUnits').classList.remove('hidden'); scores = [0, 0]; updateScores();
+            hideAllScreens(); document.getElementById('screenUnits').classList.remove('hidden'); 
+            scores = [0, 0]; comboCount = [0, 0]; updateScores();
         } 
         else if (!document.getElementById('screenUnits').classList.contains('hidden')) {
             hideAllScreens(); document.getElementById('screenGrade').classList.remove('hidden');
@@ -472,7 +484,8 @@
             hideAllScreens(); document.getElementById('screenDevice').classList.remove('hidden'); hasSelectedDevice = false;
         } 
         else if (!document.getElementById('screenResult').classList.contains('hidden')) {
-            hideAllScreens(); document.getElementById('screenUnits').classList.remove('hidden'); scores = [0, 0]; updateScores();
+            hideAllScreens(); document.getElementById('screenUnits').classList.remove('hidden'); 
+            scores = [0, 0]; comboCount = [0, 0]; updateScores();
         }
         
         window.scrollTo(0, 0); 
@@ -480,8 +493,10 @@
     }
 
     function fullReset() {
-        stopAllTimers(); hideAllScreens(); scores = [0, 0]; updateScores(); 
+        stopAllTimers(); hideAllScreens(); scores = [0, 0]; comboCount = [0, 0]; updateScores(); 
         hasSelectedDevice = false; document.getElementById('screenDevice').classList.remove('hidden'); 
+        // Ana menüye dönerken Welcome ekranı tekrar görünmesin istiyorsan böyle kalabilir. Görünsün dersen aşağıdaki satırı açabilirsin:
+        // document.getElementById('screenWelcome').classList.remove('hidden-welcome');
         window.scrollTo(0, 0); 
         updateBackButton();
     }
@@ -489,8 +504,7 @@
     function selectDevice(dev) {
         deviceType = dev; hasSelectedDevice = true; document.getElementById('screenDevice').classList.add('hidden');
         if (dev === 'mobile') selectMode('1p'); else document.getElementById('screenMode').classList.remove('hidden');
-        window.scrollTo(0, 0);
-        updateBackButton();
+        window.scrollTo(0, 0); updateBackButton();
     }
 
     function selectMode(mode) {
@@ -517,14 +531,11 @@
             document.getElementById('topScore1P').classList.add('hidden');
         }
         document.getElementById('screenTeams').classList.remove('hidden');
-        window.scrollTo(0, 0);
-        updateBackButton();
+        window.scrollTo(0, 0); updateBackButton();
     }
 
     function goToGrade() {
-        if(audioCtx && audioCtx.state === 'suspended') {
-            audioCtx.resume().catch(e=>{});
-        }
+        if(audioCtx && audioCtx.state === 'suspended') { audioCtx.resume().catch(e=>{}); }
         if (gameMode === '2p') {
             t1Size = parseInt(document.getElementById('t1SizeInput').value) || 15;
             t2Size = parseInt(document.getElementById('t2SizeInput').value) || 15;
@@ -532,8 +543,7 @@
         }
         document.getElementById('screenTeams').classList.add('hidden');
         document.getElementById('screenGrade').classList.remove('hidden');
-        window.scrollTo(0, 0);
-        updateBackButton();
+        window.scrollTo(0, 0); updateBackButton();
     }
 
     function selectGrade(grade) {
@@ -551,8 +561,7 @@
             btn.innerHTML = `<i class="fas ${u.icon}"></i><span>${u.name}</span>`;
             btn.onclick = () => startCompetition(u); grid.appendChild(btn);
         });
-        window.scrollTo(0, 0);
-        updateBackButton();
+        window.scrollTo(0, 0); updateBackButton();
     }
 
     function fillPool(size) { return Array.from({length: size}, (_, i) => i + 1); }
@@ -567,12 +576,12 @@
     function startCompetition(unit) {
         selectedUnit = unit; wordPool = [...unit.words].sort(() => Math.random() - 0.5);
         document.getElementById('screenUnits').classList.add('hidden');
+        comboCount = [0, 0]; 
         
         let t1Name = document.getElementById('t1Input').value.trim() || "TAKIM 1";
         if(gameMode === '1p') t1Name = document.getElementById('t1Input').value.trim() || "OYUNCU";
         
         document.getElementById('dispT1Name').textContent = t1Name;
-        // İŞTE ÇÖKÜŞÜ ENGELLEYEN YENİ KOD (Skoru silmeyen etiket)
         document.getElementById('ts1-name-lbl').textContent = t1Name; 
 
         if (gameMode === '1p') {
@@ -585,8 +594,7 @@
             document.getElementById('selT2Name').textContent = t2Name;
             goToSelector();
         }
-        window.scrollTo(0, 0);
-        updateBackButton();
+        window.scrollTo(0, 0); updateBackButton();
     }
 
     function goToSelector() {
@@ -665,7 +673,15 @@
         });
     }
 
-    function showDynamicIsland(isCorrect, isGolden) {
+    function showComboText(count) {
+        const comboEl = document.createElement('div');
+        comboEl.className = 'combo-popup combo-anim';
+        comboEl.innerHTML = `🔥 COMBO x${count} 🔥<br><span style="font-size:24px;">+10 BONUS!</span>`;
+        document.body.appendChild(comboEl);
+        setTimeout(() => { if(document.body.contains(comboEl)) { comboEl.remove(); } }, 1500);
+    }
+
+    function showDynamicIsland(isCorrect, isGolden, isCombo = false) {
         clearTimeout(islandTimeout);
         const di = document.getElementById('dynamicIsland');
         const diText = document.getElementById('diText');
@@ -675,16 +691,16 @@
         diFill.style.transition = 'none'; diFill.style.width = '100%';
 
         if (isCorrect) {
-            diText.innerHTML = `<i class="fas fa-check-circle" style="color:#4ade80"></i> MeBot Doğru Bildi! <span style="color:#4ade80">${isGolden ? '(+30)' : '(+10)'}</span>`;
+            let pts = isGolden ? 30 : 10;
+            if(isCombo) pts += 10;
+            diText.innerHTML = `<i class="fas fa-check-circle" style="color:#4ade80"></i> MeBot Doğru Bildi! <span style="color:#4ade80">(+${pts})</span>`;
         } else {
             diText.innerHTML = `<i class="fas fa-times-circle" style="color:#f87171"></i> MeBot Yanlış Yaptı! <span style="color:#f87171">(-5)</span>`;
         }
 
         void di.offsetWidth;
-
         diFill.style.transition = 'width 1.5s linear';
         diFill.style.width = '0%';
-
         islandTimeout = setTimeout(() => { di.classList.add('hidden-island'); }, 1500);
     }
 
@@ -694,11 +710,23 @@
         clearTimeout(aiTimer); 
 
         if (val === currentWord.t) {
+            comboCount[teamId - 1]++;
+            let isCombo = comboCount[teamId - 1] >= 3;
+
             if(btn) btn.classList.add('correct'); 
-            playSafeSound('correct');
-            scores[teamId - 1] += isGoldenQuestion ? 30 : 10;
-            if(teamId === 2 && gameMode === '1p') showDynamicIsland(true, isGoldenQuestion);
+            
+            if(isCombo) {
+                playSafeSound('combo'); 
+                scores[teamId - 1] += isGoldenQuestion ? 40 : 20; 
+                showComboText(comboCount[teamId - 1]);
+                if(teamId === 2 && gameMode === '1p') showDynamicIsland(true, isGoldenQuestion, true);
+            } else {
+                playSafeSound('correct');
+                scores[teamId - 1] += isGoldenQuestion ? 30 : 10;
+                if(teamId === 2 && gameMode === '1p') showDynamicIsland(true, isGoldenQuestion, false);
+            }
         } else {
+            comboCount[teamId - 1] = 0; 
             if(btn) btn.classList.add('wrong'); 
             playSafeSound('wrong');
             scores[teamId - 1] -= 5;
@@ -709,12 +737,7 @@
         updateScores();
         
         roundTimeout = setTimeout(() => { 
-            try {
-                if (gameMode === '1p') startActualGame(); 
-                else goToSelector(); 
-            } catch(e) {
-                fullReset(); 
-            }
+            try { if (gameMode === '1p') startActualGame(); else goToSelector(); } catch(e) { fullReset(); }
         }, 1500);
     }
 
