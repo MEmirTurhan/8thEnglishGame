@@ -6,6 +6,11 @@
     <title>Me Games English - Ultimate Edition</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;800&display=swap" rel="stylesheet">
+    
+    <script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-firestore-compat.js"></script>
+
     <style>
         /* --- TEMA DEĞİŞKENLERİ --- */
         :root {
@@ -21,6 +26,9 @@
             --t2-bg: #f0f7ff;            
             --success: #22c55e;
             --splash-bg: #ffffff;
+            --admin-red: #dc2626;        
+            --points-color: #f59e0b;
+            --boost-blue: #3b82f6;       
         }
 
         body.dark-mode {
@@ -29,7 +37,7 @@
             --t2-bg: rgba(59, 130, 246, 0.1); --splash-bg: #0f172a;
         }
 
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; transition: background-color 0.3s, color 0.3s; }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; transition: background-color 0.3s, color 0.3s, border-color 0.3s; }
         body { background-color: var(--bg-body); color: var(--text-main); min-height: 100vh; display: flex; flex-direction: column; overflow-x: hidden; }
 
         /* SPLASH SCREEN */
@@ -38,59 +46,151 @@
         #splash-screen.hidden-splash { opacity: 0; visibility: hidden; }
         @keyframes pulseLogo { 0%, 100% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.05); opacity: 0.9; } }
 
-        /* YENİ: HOŞGELDİN EKRANI (ÇAPRAZ BÖLÜNMÜŞ TASARIM) */
-        #screenWelcome {
-            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-            background: var(--bg-body); z-index: 9000;
-            display: flex; transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-        #screenWelcome.hidden-welcome { opacity: 0; visibility: hidden; transform: scale(1.05); pointer-events: none; }
-        
-        .welcome-left {
-            flex: 1; background: linear-gradient(135deg, var(--primary) 0%, #0f766e 100%);
-            /* Çapraz kesim efekti */
-            clip-path: polygon(0 0, 100% 0, 85% 100%, 0% 100%);
-            display: flex; justify-content: center; align-items: center;
-        }
-        .book-img {
-            max-width: 60%; max-height: 60%; object-fit: contain; filter: drop-shadow(0 20px 30px rgba(0,0,0,0.3));
-            animation: floatAnim 4s ease-in-out infinite;
-        }
-        @keyframes floatAnim { 0%, 100% { transform: translateY(0) rotate(0deg); } 50% { transform: translateY(-20px) rotate(2deg); } }
+        /* GÜNCELLEME NOTLARI EKRANI */
+        #screenUpdates { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background-color: rgba(0,0,0,0.5); z-index: 9500; display: flex; justify-content: center; align-items: center; backdrop-filter: blur(10px); opacity: 1; transition: 0.5s; overflow-y: auto; padding: 20px; }
+        #screenUpdates.hidden-updates { opacity: 0; visibility: hidden; pointer-events: none; transform: scale(0.9); }
+        .update-list { text-align: left; list-style: none; margin-bottom: 30px; margin-top: 20px;}
+        .update-list li { margin-bottom: 15px; display: flex; align-items: flex-start; gap: 12px; font-weight: 500; font-size: 15px; line-height: 1.5; }
+        .update-list li i { color: var(--success); margin-top: 4px; flex-shrink: 0; }
+        .update-tag-new { background: var(--boost-blue); color: white; padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: 800; vertical-align: middle; margin-left: 5px; }
 
-        .welcome-right {
-            flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 40px; position: relative;
-        }
-        .welcome-title { font-size: 56px; font-weight: 900; color: var(--text-main); margin-bottom: 30px; opacity: 0; animation: slideUp 1s cubic-bezier(0.16, 1, 0.3, 1) 0.5s forwards; }
-        .welcome-subtitle { font-size: 18px; color: var(--text-sub); margin-bottom: 40px; font-weight: 500; opacity: 0; animation: slideUp 1s cubic-bezier(0.16, 1, 0.3, 1) 0.7s forwards; text-align: center;}
-        
-        .welcome-buttons { display: flex; flex-direction: column; gap: 15px; width: 100%; max-width: 350px; opacity: 0; animation: slideUp 1s cubic-bezier(0.16, 1, 0.3, 1) 0.9s forwards; }
+        /* HOŞGELDİN EKRANI */
+        #screenWelcome { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: var(--bg-body); z-index: 9000; display: flex; transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1); overflow-y: auto; }
+        #screenWelcome.hidden-welcome { opacity: 0; visibility: hidden; transform: scale(1.05); pointer-events: none; }
+        .welcome-left { flex: 1; background: linear-gradient(135deg, var(--primary) 0%, #0f766e 100%); clip-path: polygon(0 0, 100% 0, 85% 100%, 0% 100%); display: flex; justify-content: center; align-items: center; min-height: 100%; }
+
+        .welcome-right { flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 40px; position: relative; min-height: 100%; }
+        .welcome-title { font-size: 56px; font-weight: 900; color: var(--text-main); margin-bottom: 30px; opacity: 0; animation: slideUp 1s cubic-bezier(0.16, 1, 0.3, 1) 0.5s forwards; text-align: center;}
+        .welcome-subtitle { font-size: 18px; color: var(--text-sub); margin-bottom: 20px; font-weight: 500; opacity: 0; animation: slideUp 1s cubic-bezier(0.16, 1, 0.3, 1) 0.7s forwards; text-align: center;}
+        .welcome-notice { font-size: 13px; color: var(--points-color); font-weight: 700; margin-bottom: 25px; text-align: center; opacity: 0; animation: slideUp 1s 0.8s forwards; background: rgba(245, 158, 11, 0.1); padding: 10px 15px; border-radius: 12px; border: 1px solid rgba(245, 158, 11, 0.3); }
+
+        .welcome-privacy-box { background: var(--bg-card); border: 2px solid var(--border); padding: 15px; border-radius: 16px; display: flex; align-items: center; gap: 10px; margin-bottom: 15px; width: 100%; max-width: 350px; opacity: 0; animation: slideUp 1s cubic-bezier(0.16, 1, 0.3, 1) 0.85s forwards; font-size: 13px; font-weight: 600; color: var(--text-main); box-shadow: 0 5px 15px rgba(0,0,0,0.05); }
+        .welcome-privacy-box input { width: 20px; height: 20px; accent-color: var(--primary); cursor: pointer; flex-shrink: 0; }
+        .welcome-privacy-box a { color: var(--primary); text-decoration: underline; cursor: pointer; font-weight: 800; }
+
+        .welcome-buttons { display: flex; flex-direction: column; gap: 15px; width: 100%; max-width: 350px; opacity: 0; animation: slideUp 1s cubic-bezier(0.16, 1, 0.3, 1) 0.9s forwards; margin-bottom: 40px;}
         .btn-welcome { padding: 18px 30px; border-radius: 16px; font-size: 18px; font-weight: 800; cursor: pointer; border: none; transition: 0.3s; display: flex; justify-content: center; align-items: center; gap: 10px; }
         .btn-start-game { background: var(--primary); color: white; box-shadow: 0 10px 25px rgba(13, 148, 136, 0.3); }
         .btn-start-game:hover { transform: translateY(-3px); box-shadow: 0 15px 30px rgba(13, 148, 136, 0.4); }
         .btn-tubitak { background: transparent; color: var(--text-main); border: 2px solid var(--border); }
         .btn-tubitak:hover { border-color: var(--primary); color: var(--primary); transform: translateY(-2px); }
+        .btn-auth-welcome { background: transparent; color: var(--t2-color); border: 2px solid var(--t2-color); }
+        .btn-auth-welcome:hover { background: var(--t2-color); color: white; transform: translateY(-2px); box-shadow: 0 5px 15px rgba(59, 130, 246, 0.3); }
+        .btn-about { background: transparent; color: #a855f7; border: 2px solid #a855f7; }
+        .btn-about:hover { background: #a855f7; color: white; transform: translateY(-2px); box-shadow: 0 5px 15px rgba(168, 85, 247, 0.3); }
+        .btn-instagram { background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%); color: white; display: flex; align-items: center; justify-content: center; gap: 10px; padding: 12px; border-radius: 12px; text-decoration: none; font-weight: 800; transition: 0.3s; margin-top: 15px; border: none; }
+        .btn-instagram:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(220, 39, 67, 0.4); color: white; }
         
-        .welcome-signature { position: absolute; bottom: 20px; font-size: 14px; font-weight: 600; color: var(--text-sub); opacity: 0.6; }
+        .welcome-signature { position: absolute; bottom: 10px; font-size: 14px; font-weight: 600; color: var(--text-sub); opacity: 0.6; text-align: center; }
         @keyframes slideUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* TÜBİTAK MODAL */
-        .modal-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.6); z-index: 10000; display: flex; justify-content: center; align-items: center; backdrop-filter: blur(5px); transition: 0.3s; }
+        /* MODALLAR */
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.6); z-index: 10000; display: flex; justify-content: center; align-items: center; backdrop-filter: blur(5px); transition: 0.3s; padding: 10px; box-sizing: border-box;}
         .modal-overlay.hidden { opacity: 0; visibility: hidden; }
-        .modal-content { background: var(--bg-card); padding: 40px; border-radius: 24px; max-width: 500px; width: 90%; text-align: center; box-shadow: 0 20px 50px rgba(0,0,0,0.2); transform: translateY(0); transition: 0.3s; border: 2px solid var(--border); }
+        .modal-content { background: var(--bg-card); padding: 40px; border-radius: 24px; max-width: 500px; width: 100%; text-align: center; box-shadow: 0 20px 50px rgba(0,0,0,0.2); transform: translateY(0); transition: 0.3s; border: 2px solid var(--border); position: relative; max-height: 90vh; overflow-y: auto; }
         .modal-overlay.hidden .modal-content { transform: translateY(50px); }
         .modal-title { font-size: 24px; font-weight: 800; color: var(--primary); margin-bottom: 20px; }
-        .modal-text { font-size: 16px; color: var(--text-main); line-height: 1.6; margin-bottom: 30px; text-align: left;}
+        .modal-text { font-size: 14px; color: var(--text-main); line-height: 1.6; margin-bottom: 20px; text-align: left; }
+        
+        .auth-input { width: 100%; padding: 15px; margin-bottom: 15px; border-radius: 12px; border: 2px solid var(--border); background: var(--bg-body); color: var(--text-main); font-weight: 600; font-size: 16px; transition: 0.3s; }
+        .auth-input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 10px rgba(13, 148, 136, 0.2); }
+        .auth-link { color: var(--primary); cursor: pointer; font-weight: 700; text-decoration: none; }
+        .auth-link:hover { text-decoration: underline; }
+        .close-modal-btn { position: absolute; top: 15px; right: 20px; background: none; border: none; font-size: 28px; color: var(--text-sub); cursor: pointer; transition: 0.2s; padding: 0 10px; z-index: 10; }
+        .close-modal-btn:hover { color: var(--t1-color); transform: scale(1.1); }
+
+        /* PROFİL SİSTEMİ CSS */
+        .profile-header { display: flex; flex-direction: column; align-items: center; }
+        .profile-avatar { width: 110px; height: 110px; border-radius: 50%; border: 4px solid var(--points-color); object-fit: cover; margin-bottom: 10px; box-shadow: 0 10px 20px rgba(0,0,0,0.1); background-color: var(--border); transition: 0.3s; }
+        .profile-avatar.editable:hover { transform: scale(1.05); border-color: var(--primary); cursor: pointer; }
+        .rank-badge { padding: 8px 20px; color: white; border-radius: 20px; font-weight: 900; font-size: 14px; display: inline-block; box-shadow: 0 5px 15px rgba(0,0,0,0.2); }
+        .mini-avatar { width: 30px; height: 30px; border-radius: 50%; object-fit: cover; border: 2px solid var(--border); vertical-align: middle; margin-right: 8px; background: var(--bg-body);}
+
+        /* AVATAR SEÇİM VE CHAT CSS */
+        .avatar-option { width: 80px; height: 80px; border-radius: 50%; border: 3px solid var(--border); cursor: pointer; transition: 0.2s; object-fit: cover; background: var(--bg-body); }
+        .avatar-option:hover { border-color: var(--primary); transform: scale(1.1); }
+        
+        .chat-bubble { max-width: 85%; padding: 10px 14px; border-radius: 16px; font-size: 14px; line-height: 1.4; word-wrap: break-word; position: relative; margin-bottom: 4px;}
+        .chat-sent { align-self: flex-end; background: var(--primary); color: white; border-bottom-right-radius: 2px; }
+        .chat-received { align-self: flex-start; background: var(--bg-card); color: var(--text-main); border: 1px solid var(--border); border-bottom-left-radius: 2px; }
+        .chat-time { font-size: 10px; opacity: 0.7; margin-top: 4px; text-align: right; display: block; }
+
+        /* ADMİN KORUMA EFEKTLERİ */
+        .admin-glow { color: var(--admin-red) !important; text-shadow: 0 0 10px var(--admin-red), 0 0 20px rgba(220, 38, 38, 0.5); font-weight: 900; letter-spacing: 0.5px; }
+        .admin-shield { color: var(--admin-red); font-size: 16px; margin-right: 6px; animation: pulseShield 2s infinite ease-in-out; display: inline-block; }
+        @keyframes pulseShield { 0%, 100% { transform: scale(1); filter: drop-shadow(0 0 2px var(--admin-red)); } 50% { transform: scale(1.1); filter: drop-shadow(0 0 8px var(--admin-red)); } }
+        
+        .user-points-badge { color: var(--points-color); font-weight: 800; font-size: 14px; margin-left: 8px; border-left: 1px solid var(--border); padding-left: 8px; display: inline-block; }
+        .info-badge { font-size: 13px; font-weight: 700; padding: 8px 12px; border-radius: 10px; margin-top: 10px; display: inline-block; }
+        .badge-green { background: rgba(34, 197, 94, 0.1); color: var(--success); border: 1px solid rgba(34, 197, 94, 0.3); }
+        .badge-red { background: rgba(239, 68, 68, 0.1); color: var(--t1-color); border: 1px solid rgba(239, 68, 68, 0.3); }
+
+        /* LİDERLİK TABLOSU VE ÇEVRİMİÇİ KİŞİLER CSS */
+        .leaderboard-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 15px; margin-bottom: 8px; background: var(--bg-body); border-radius: 12px; border: 1px solid var(--border); transition: 0.2s; cursor: pointer; }
+        .leaderboard-item:hover { transform: translateX(5px); border-color: var(--points-color); box-shadow: 0 2px 10px rgba(245, 158, 11, 0.1); }
+        .rank-medal { font-size: 20px; width: 30px; text-align: center; display: inline-block; }
+        
+        .online-user-item { display: flex; align-items: center; gap: 10px; padding: 12px 15px; margin-bottom: 8px; background: var(--bg-body); border-radius: 12px; border: 1px solid var(--success); font-weight: 700; color: var(--text-main); cursor: pointer; transition: 0.2s;}
+        .online-user-item:hover { transform: translateX(5px); background: rgba(34, 197, 94, 0.05); }
+        .pulse-green-dot { width: 10px; height: 10px; background-color: var(--success); border-radius: 50%; box-shadow: 0 0 10px var(--success); animation: pulseGreen 1.5s infinite; }
+        @keyframes pulseGreen { 0% { transform: scale(0.95); opacity: 0.8; } 50% { transform: scale(1.3); opacity: 1; } 100% { transform: scale(0.95); opacity: 0.8; } }
+
+        /* --- MARKET VE EŞYA CSS --- */
+        #btnMarket { background: linear-gradient(45deg, #a855f7, #ec4899); color: white; border: none; font-weight: 800; box-shadow: 0 0 15px rgba(236, 72, 153, 0.4); animation: pulseMarket 2s infinite; display: none; }
+        #btnMarket:hover { transform: translateY(-2px) scale(1.05); box-shadow: 0 5px 20px rgba(236, 72, 153, 0.6); }
+        @keyframes pulseMarket { 0% { box-shadow: 0 0 10px rgba(236, 72, 153, 0.4); } 50% { box-shadow: 0 0 25px rgba(236, 72, 153, 0.8); } 100% { box-shadow: 0 0 10px rgba(236, 72, 153, 0.4); } }
+
+        .market-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 20px; max-height: 50vh; overflow-y: auto; padding-right: 5px; }
+        .market-item { background: var(--bg-body); border: 2px solid var(--border); border-radius: 16px; padding: 15px; display: flex; flex-direction: column; align-items: center; text-align: center; transition: 0.3s; position: relative; }
+        .market-item.consumable { border-color: var(--boost-blue); background: rgba(59, 130, 246, 0.05); }
+        .market-item:hover { border-color: #ec4899; transform: translateY(-3px); }
+        .market-item img { width: 80px; height: 80px; object-fit: contain; margin-bottom: 10px; filter: drop-shadow(0 5px 10px rgba(0,0,0,0.2)); }
+        .market-item-name { font-weight: 800; font-size: 16px; color: var(--text-main); margin-bottom: 5px; }
+        .market-item-price { font-weight: 900; color: var(--points-color); font-size: 14px; margin-bottom: 15px; }
+        .btn-buy { width: 100%; padding: 10px; border-radius: 10px; border: none; font-weight: 800; cursor: pointer; transition: 0.2s; }
+        .btn-buy.buyable { background: var(--primary); color: white; }
+        .btn-buy.buyable:hover { background: #0f766e; }
+        .btn-buy.buyable-blue { background: var(--boost-blue); color: white; }
+        .btn-buy.buyable-blue:hover { background: #2563eb; }
+        .btn-buy.too-expensive { background: var(--border); color: var(--text-sub); cursor: not-allowed; }
+        .btn-buy.equip { background: #a855f7; color: white; }
+        .btn-buy.equip:hover { background: #9333ea; }
+        .btn-buy.equipped { background: var(--success); color: white; cursor: default; }
+
+        .hat-overlay { position: absolute; top: -45px; right: -30px; width: 85px; height: auto; z-index: 100; transform: rotate(15deg); filter: drop-shadow(0 5px 10px rgba(0,0,0,0.4)); display: none; pointer-events: none; }
+
+        /* BOOST EKRANI UI */
+        .boost-panel-container { position: relative; bottom: auto; right: auto; z-index: 100; display: none; flex-direction: column; align-items: center; gap: 8px; margin: 15px 0; order: 1; width: 100%; max-width: 400px; }
+        .btn-boost-action { background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); color: white; border: 3px solid #60a5fa; border-radius: 20px; padding: 12px 20px; font-size: 16px; font-weight: 900; cursor: pointer; box-shadow: 0 10px 20px rgba(59, 130, 246, 0.4); transition: 0.3s; display: flex; align-items: center; gap: 10px; justify-content: center; width: 100%;}
+        .btn-boost-action:hover { transform: scale(1.05); box-shadow: 0 15px 30px rgba(59, 130, 246, 0.6); }
+        .btn-boost-action.active { background: linear-gradient(135deg, #10b981 0%, #059669 100%); border-color: #34d399; box-shadow: 0 0 30px rgba(16, 185, 129, 0.6); animation: pulseGreen 1s infinite; pointer-events: none; }
+        .btn-boost-action.disabled { background: var(--border); color: var(--text-sub); border-color: var(--text-sub); box-shadow: none; cursor: not-allowed; transform: none; }
+        .boost-badge { background: white; color: #2563eb; border-radius: 50%; width: 24px; height: 24px; display: flex; justify-content: center; align-items: center; font-size: 14px; }
+        .boost-timer-bar { width: 100%; height: 6px; background: rgba(0,0,0,0.3); border-radius: 3px; overflow: hidden; display: none; margin-top: 5px; }
+        .boost-timer-fill { height: 100%; width: 100%; background: #fff; transition: width 1s linear; }
+
+        .btn-ban { background: none; border: none; color: var(--t1-color); cursor: pointer; font-size: 18px; margin-left: 15px; transition: 0.2s; padding: 5px; opacity: 0.7; }
+        .btn-ban:hover { transform: scale(1.2) rotate(15deg); opacity: 1; text-shadow: 0 0 5px rgba(239, 68, 68, 0.5); }
 
         /* HEADER & DİĞERLERİ */
-        header { background: var(--bg-card); padding: 15px 40px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 20px rgba(0,0,0,0.05); border-bottom: 1px solid var(--border); z-index: 50; }
-        .logo-area { display: flex; align-items: center; gap: 15px; }
-        .logo { font-size: 26px; font-weight: 800; color: var(--primary); display: flex; align-items: center; gap: 12px; }
-        .controls { display: flex; gap: 12px; align-items: center; }
-        .control-btn { background: var(--bg-body); border: 1px solid var(--border); padding: 10px 18px; border-radius: 12px; cursor: pointer; display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 14px; color: var(--text-main); user-select: none; transition: 0.2s; }
-        .control-btn:hover { border-color: var(--primary); transform: translateY(-2px); }
+        header { background: var(--bg-card); padding: 10px 15px; display: flex; flex-direction: row; flex-wrap: wrap; justify-content: space-between; align-items: center; box-shadow: 0 4px 20px rgba(0,0,0,0.05); border-bottom: 1px solid var(--border); z-index: 50; gap: 10px; }
+        .logo-area { width: auto; position: static; display: flex; align-items: center; gap: 10px; }
+        .logo { font-size: 20px; font-weight: 800; color: var(--primary); display: flex; align-items: center; gap: 10px; cursor:pointer;}
+        
+        .controls { display: flex; flex-wrap: wrap; justify-content: center; width: 100%; gap: 6px; }
+        .control-btn { background: var(--bg-body); border: 1px solid var(--border); padding: 8px 12px; font-size: 14px; border-radius: 10px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; font-weight: 700; color: var(--text-main); user-select: none; transition: 0.3s; white-space: nowrap; flex: 1; min-width: max-content; }
+        .control-btn:hover:not(#btnLeaderboard):not(#btnOnlineStatus):not(#btnMarket) { border-color: var(--primary); transform: translateY(-2px); }
         #btnBack { background: var(--t2-bg); border-color: var(--t2-color); color: var(--t2-color); padding: 10px 15px; }
         #btnBack:hover { background: var(--t2-color); color: white; transform: translateX(-3px); }
+        
+        #btnAdminPanel { border-color: var(--admin-red); color: var(--admin-red); background: rgba(220, 38, 38, 0.1); font-weight: 800; }
+        #btnAdminPanel:hover { background: var(--admin-red); color: white; transform: translateY(-2px); box-shadow: 0 5px 15px rgba(220, 38, 38, 0.4); }
+
+        #btnLeaderboard { border-color: var(--points-color); background: rgba(245, 158, 11, 0.1); color: var(--points-color); font-weight: 800; box-shadow: 0 0 10px rgba(245, 158, 11, 0.2); }
+        #btnLeaderboard:hover { background: var(--points-color); color: white; transform: translateY(-2px); box-shadow: 0 5px 15px rgba(245, 158, 11, 0.4); }
+
+        #btnOnlineStatus { border-color: var(--success); background: rgba(34, 197, 94, 0.1); color: var(--success); font-weight: 800; }
+        #btnOnlineStatus:hover { background: var(--success); color: white; transform: translateY(-2px); box-shadow: 0 5px 15px rgba(34, 197, 94, 0.4);}
 
         .container { flex: 1; display: flex; flex-direction: column; width: 100%; position: relative; }
         .card { background: var(--bg-card); border-radius: 24px; padding: 40px; margin: 40px auto; max-width: 1000px; width: 90%; box-shadow: 0 10px 30px rgba(0,0,0,0.04); border: 1px solid var(--border); text-align: center; }
@@ -122,13 +222,17 @@
         .score-display { font-size: 60px; font-weight: 900; line-height: 1; }
         .active-player-badge { background: var(--text-main); color: var(--bg-body); padding: 5px 15px; border-radius: 20px; font-weight: 800; font-size: 18px; display: inline-block; margin-top: 5px; }
 
+        #screenGame.mode-1p { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 5px 15px; height: auto; min-height: calc(100vh - 100px); }
+        #screenGame.mode-1p .central-word-container { position: relative; top: auto; left: auto; transform: none; width: 100%; max-width: 500px; margin-top: 10px; margin-bottom: 15px; font-size: 32px; padding: 20px; order: 2; box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
+        #screenGame.mode-1p.golden-question .central-word-container { animation: goldPulseRelative 1.5s infinite; }
         #screenGame.mode-1p .team-2-zone { display: none !important; }
-        #screenGame.mode-1p .team-1-zone { width: 100% !important; border-right: none !important; padding-top: 120px; }
+        #screenGame.mode-1p .team-1-zone { width: 100% !important; padding: 0; order: 3; align-items: center; justify-content: flex-start; border-right: none !important; }
         #screenGame.mode-1p .team-header { display: none; } 
+        #screenGame.mode-1p .options-column { margin-top: 0; width: 100%; max-width: 400px; gap: 8px; }
         
-        .top-scoreboard-1p { position: absolute; top: 20px; left: 20px; background: var(--bg-card); border: 2px solid var(--border); padding: 10px 20px; border-radius: 20px; font-weight: 800; display: flex; gap: 20px; z-index: 5; box-shadow: 0 5px 15px rgba(0,0,0,0.05); align-items: center; }
-        .top-scoreboard-1p span.p1-sc { color: var(--t1-color); font-size: 18px; }
-        .top-scoreboard-1p span.bot-sc { color: var(--t2-color); font-size: 18px; }
+        .top-scoreboard-1p { position: relative; margin-bottom: 5px; background: var(--bg-card); border: 2px solid var(--border); padding: 8px 15px; border-radius: 20px; font-weight: 800; display: flex; gap: 15px; z-index: 5; box-shadow: 0 5px 15px rgba(0,0,0,0.05); align-items: center; justify-content: center; width: 100%; max-width: 400px; }
+        .top-scoreboard-1p span.p1-sc { color: var(--t1-color); font-size: 16px; }
+        .top-scoreboard-1p span.bot-sc { color: var(--t2-color); font-size: 16px; }
 
         .dynamic-island { position: fixed; top: 15px; left: 50%; transform: translateX(-50%); background: #000000; color: #ffffff; border-radius: 40px; padding: 12px 25px; display: flex; flex-direction: column; align-items: center; min-width: 220px; z-index: 10000; box-shadow: 0 10px 30px rgba(0,0,0,0.5); transition: all 0.5s cubic-bezier(0.68, -0.55, 0.27, 1.55); overflow: hidden; opacity: 1; }
         .dynamic-island.hidden-island { top: -100px; opacity: 0; transform: translate(-50%, 0) scale(0.7); pointer-events: none; }
@@ -136,18 +240,22 @@
         .di-progress-bar { width: 100%; height: 3px; background: rgba(255,255,255,0.2); margin-top: 10px; border-radius: 3px; overflow: hidden; }
         .di-progress-fill { height: 100%; background: #ffffff; width: 100%; transform-origin: left; }
 
-        .combo-popup { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0); background: linear-gradient(135deg, #ff416c 0%, #ff4b2b 100%); color: white; padding: 20px 50px; border-radius: 25px; font-size: 42px; font-weight: 900; z-index: 10001; box-shadow: 0 20px 50px rgba(255, 75, 43, 0.6); pointer-events: none; text-transform: uppercase; border: 4px solid #fff; text-align: center; line-height: 1.2; }
+        .combo-popup { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0); background: linear-gradient(135deg, #ff416c 0%, #ff4b2b 100%); color: white; padding: 15px 30px; border-radius: 25px; font-size: 32px; font-weight: 900; z-index: 10001; box-shadow: 0 20px 50px rgba(255, 75, 43, 0.6); pointer-events: none; text-transform: uppercase; border: 4px solid #fff; text-align: center; line-height: 1.2; }
+        .combo-popup.x2-active { background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); box-shadow: 0 20px 50px rgba(59, 130, 246, 0.6); }
         .combo-anim { animation: comboPop 1.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
         @keyframes comboPop { 0% { transform: translate(-50%, -50%) scale(0) rotate(-10deg); opacity: 0; } 20% { transform: translate(-50%, -50%) scale(1.1) rotate(5deg); opacity: 1; } 40% { transform: translate(-50%, -50%) scale(1) rotate(0deg); opacity: 1; } 80% { transform: translate(-50%, -50%) scale(1) rotate(0deg); opacity: 1; } 100% { transform: translate(-50%, -100%) scale(1.2); opacity: 0; } }
 
-        .central-word-container { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 50; background: #0f172a; color: white; padding: 25px 50px; border-radius: 20px; font-size: 42px; font-weight: 800; box-shadow: 0 20px 50px rgba(0,0,0,0.3); text-transform: uppercase; border: 4px solid var(--bg-card); text-align: center; transition: 0.3s; }
+        .central-word-container { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 50; background: #0f172a; color: white; padding: 25px 50px; border-radius: 20px; font-weight: 800; box-shadow: 0 20px 50px rgba(0,0,0,0.3); text-transform: uppercase; border: 4px solid var(--bg-card); text-align: center; transition: 0.3s; }
         .golden-question .central-word-container { background: linear-gradient(135deg, #b45309 0%, #f59e0b 50%, #fbbf24 100%); border-color: #fcd34d; box-shadow: 0 0 50px rgba(245, 158, 11, 0.6); animation: goldPulse 1.5s infinite; }
+        
         @keyframes goldPulse { 0% { transform: translate(-50%, -50%) scale(1); } 50% { transform: translate(-50%, -50%) scale(1.05); } 100% { transform: translate(-50%, -50%) scale(1); } }
+        @keyframes goldPulseRelative { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }
+
         .golden-tag { display: none; position: absolute; top: -20px; left: 50%; transform: translateX(-50%); background: #ef4444; color: white; padding: 5px 15px; border-radius: 20px; font-size: 14px; font-weight: 800; white-space: nowrap; border: 2px solid white; }
         .golden-question .golden-tag { display: block; }
 
         .options-column { display: grid; grid-template-columns: 1fr; gap: 15px; width: 100%; max-width: 350px; margin-top: 80px; }
-        .opt-btn { padding: 20px; background: var(--bg-card); border: 3px solid var(--border); color: var(--text-main); border-radius: 16px; font-size: 20px; font-weight: 700; cursor: pointer; }
+        .opt-btn { padding: 15px; background: var(--bg-card); border: 3px solid var(--border); color: var(--text-main); border-radius: 16px; font-size: 18px; font-weight: 700; cursor: pointer; transition: 0.2s; }
         .team-1-zone .opt-btn:hover:not(:disabled) { border-color: var(--t1-color); }
         .team-2-zone .opt-btn:hover:not(:disabled) { border-color: var(--t2-color); }
         .opt-btn.correct { background: var(--success) !important; color: white !important; border-color: var(--success) !important; transform: scale(1.05); }
@@ -155,68 +263,155 @@
         @keyframes shake { 0% { transform: translateX(0); } 25% { transform: translateX(-5px); } 50% { transform: translateX(5px); } 75% { transform: translateX(-5px); } 100% { transform: translateX(0); } }
 
         .unit-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 15px; margin-top: 30px; }
-        .unit-btn { background: var(--bg-card); border: 2px solid var(--border); color: var(--text-main); padding: 25px; border-radius: 20px; cursor: pointer; font-weight: 700; display: flex; flex-direction: column; gap: 10px; align-items: center; }
-        .btn-main { padding: 18px 50px; background: var(--primary); color: white; border: none; border-radius: 14px; font-size: 18px; font-weight: 800; cursor: pointer; }
+        .unit-btn { background: var(--bg-card); border: 2px solid var(--border); color: var(--text-main); padding: 25px; border-radius: 20px; cursor: pointer; font-weight: 700; display: flex; flex-direction: column; gap: 10px; align-items: center; transition: 0.3s; position: relative;}
+        .unit-btn:hover { border-color: var(--primary); transform: translateY(-3px); }
+        
+        .btn-rgb { background: linear-gradient(45deg, #ff0000, #ff7300, #fffb00, #48ff00, #00ffd5, #002bff, #7a00ff, #ff00c8, #ff0000); background-size: 400%; animation: glowing 10s linear infinite; color: white; border: none; box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
+        .btn-rgb:hover { opacity: 0.9; transform: scale(1.02); }
+        @keyframes glowing { 0% { background-position: 0 0; } 50% { background-position: 400% 0; } 100% { background-position: 0 0; } }
+        
+        .unit-btn.selected-unit { border-color: var(--success); background: rgba(34, 197, 94, 0.1); transform: scale(1.05); box-shadow: 0 0 15px rgba(34, 197, 94, 0.3); }
+        .unit-btn.selected-unit::after { content: '\f00c'; font-family: 'Font Awesome 5 Free'; font-weight: 900; position: absolute; top: 10px; right: 15px; color: var(--success); font-size: 20px; }
+
+        .btn-main { padding: 18px 50px; background: var(--primary); color: white; border: none; border-radius: 14px; font-size: 18px; font-weight: 800; cursor: pointer; transition: 0.3s; }
+        .btn-main:hover { opacity: 0.9; transform: translateY(-2px); }
+        .btn-main:disabled { background: var(--text-sub) !important; cursor: not-allowed; opacity: 0.7; transform: none; box-shadow: none !important;}
         
         .hidden { display: none !important; }
         .confetti { position: absolute; width: 10px; height: 10px; top: -10px; border-radius: 50%; animation: fall 3s linear forwards; z-index: 100; }
         @keyframes fall { to { transform: translateY(100vh) rotate(360deg); opacity: 0; } }
 
-        /* MOBİL UYUMLULUK */
+        /* MOBİL UYUM */
         @media (max-width: 768px) {
-            /* Karşılama Ekranı Mobilde Alt Alta Çapraz */
-            #screenWelcome { flex-direction: column; }
-            .welcome-left { clip-path: polygon(0 0, 100% 0, 100% 85%, 0 100%); flex: 0.6; }
-            .welcome-title { font-size: 40px; }
-            
-            header { padding: 10px 15px; flex-direction: column; gap: 10px; }
-            .logo-area { width: 100%; justify-content: center; position: relative; }
-            #btnBack { position: absolute; left: 0; }
-            .logo { font-size: 22px; }
-            .card { margin: 20px auto; padding: 20px; width: 95%; }
+            #screenWelcome { display: block; overflow-y: auto; height: 100vh; }
+            .welcome-left { clip-path: polygon(0 0, 100% 0, 100% 90%, 0 100%); min-height: 40vh; }
+            .welcome-right { padding: 20px; min-height: auto; padding-bottom: 50px; }
+            .welcome-title { font-size: 36px; margin-bottom: 15px;}
+            .welcome-buttons { margin-bottom: 60px; }
+            .hide-mobile { display: none !important; } 
+            .card { margin: 15px auto; padding: 20px; width: 95%; }
             .grade-selection-grid { grid-template-columns: 1fr; }
             .big-selection-grid { flex-direction: column; }
             .team-setup-grid { grid-template-columns: 1fr; gap: 15px; }
-            .top-scoreboard-1p { position: relative !important; top: 0 !important; left: 0 !important; margin-bottom: 20px; width: 100%; justify-content: center; }
+            .market-grid { grid-template-columns: 1fr; }
+            .boost-panel-container { margin: 10px 0; }
+            .btn-boost-action { padding: 10px 15px; font-size: 14px; }
             
-            #screenGame.mode-1p { display: flex; flex-direction: column; justify-content: flex-start; align-items: center; padding: 15px; height: auto; min-height: calc(100vh - 80px); }
-            #screenGame.mode-1p .central-word-container { position: relative; top: auto; left: auto; transform: none; width: 100%; margin-bottom: 25px; font-size: 32px; padding: 20px; order: 1; box-shadow: 0 10px 20px rgba(0,0,0,0.1); }
-            #screenGame.mode-1p .team-1-zone { width: 100%; padding: 0; order: 2; justify-content: flex-start; }
-            #screenGame.mode-1p .options-column { margin-top: 0; width: 100%; }
-
-            #screenGame:not(.mode-1p) { display: flex; flex-direction: column; justify-content: flex-start; padding: 10px; height: auto; min-height: 100vh; }
-            #screenGame:not(.mode-1p) .central-word-container { position: relative; top: auto; left: auto; transform: none; width: 95%; margin: 15px auto; order: 2; padding: 15px; font-size: 28px; }
-            #screenGame:not(.mode-1p) .team-2-zone { order: 1; border-bottom: 2px dashed var(--border); padding-bottom: 15px; }
-            #screenGame:not(.mode-1p) .team-1-zone { order: 3; padding-top: 15px; border-right: none; }
-            #screenGame:not(.mode-1p) .options-column { margin-top: 10px; width: 100%; }
-            
-            .team-header { position: relative; top: 0; margin-bottom: 10px; }
-            .score-display { font-size: 40px; margin-bottom: 5px; }
-            .opt-btn { padding: 15px; font-size: 16px; }
-            .combo-popup { font-size: 32px; padding: 15px 30px; }
+            /* Mobil Modal Düzeltmeleri */
+            .modal-content { padding: 25px 20px; border-radius: 20px; }
+            .modal-title { font-size: 20px; }
+            .avatar-grid { grid-template-columns: repeat(3, 1fr) !important; gap: 10px !important; }
+            .avatar-option { width: 65px; height: 65px; }
         }
+        
+        /* REHBER BOT NEO CSS */
+        .tour-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.7); z-index: 10000; opacity: 0; visibility: hidden; transition: 0.3s; backdrop-filter: blur(3px); }
+        .tour-overlay.active { opacity: 1; visibility: visible; }
+        
+        .tour-dialog { position: fixed; z-index: 10002; background: var(--bg-card); border: 3px solid var(--boost-blue); border-radius: 20px; padding: 20px; width: 90%; max-width: 320px; box-shadow: 0 15px 40px rgba(0,0,0,0.4); opacity: 0; visibility: hidden; display: flex; flex-direction: column; align-items: center; text-align: center; transition: all 0.5s cubic-bezier(0.25, 1, 0.5, 1); }
+        .tour-dialog.active { opacity: 1; visibility: visible; }
+        
+        .tour-robot-img { width: 75px; height: 75px; margin-bottom: 10px; filter: drop-shadow(0 5px 10px rgba(59, 130, 246, 0.5)); animation: floatNeo 3s infinite ease-in-out; }
+        @keyframes floatNeo { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+        
+        .tour-title { color: var(--boost-blue); font-size: 20px; font-weight: 900; margin-bottom: 8px; }
+        .tour-text { color: var(--text-main); font-size: 13px; margin-bottom: 15px; line-height: 1.5; font-weight: 600; }
+        .tour-buttons { display: flex; gap: 8px; width: 100%; }
+        .tour-btn { flex: 1; padding: 12px; border-radius: 12px; font-weight: 800; cursor: pointer; border: none; transition: 0.2s; font-size: 14px; }
+        .tour-btn-skip { background: var(--border); color: var(--text-sub); }
+        .tour-btn-skip:hover { background: var(--t1-color); color: white; }
+        .tour-btn-next { background: var(--boost-blue); color: white; box-shadow: 0 5px 15px rgba(59, 130, 246, 0.4); }
+        .tour-btn-next:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(59, 130, 246, 0.6); }
+        .tour-highlight { position: relative !important; z-index: 10001 !important; background: var(--bg-card) !important; box-shadow: 0 0 0 6px var(--boost-blue), 0 0 30px rgba(59, 130, 246, 0.8) !important; border-radius: 16px !important; pointer-events: none !important; transition: 0.3s; transform: scale(1.05); }
+ 
+        /* MESAJ KUTUSU (INBOX) CSS */
+        .inbox-modal { border-color: var(--boost-blue); border-width: 3px; }
+        .inbox-item { display: flex; justify-content: space-between; align-items: center; padding: 15px; background: var(--bg-body); border-radius: 16px; border: 1px solid var(--border); margin-bottom: 10px; cursor: pointer; transition: 0.2s; }
+        .inbox-item:hover { border-color: var(--boost-blue); transform: translateX(5px); }
+        .inbox-item.unread { background: rgba(59, 130, 246, 0.1); border-color: var(--boost-blue); }
+        .inbox-details { flex: 1; text-align: left; margin-left: 15px; overflow: hidden; }
+        .inbox-name { font-weight: 800; color: var(--boost-blue); font-size: 16px; margin-bottom: 5px; }
+        .inbox-msg { font-size: 13px; color: var(--text-sub); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .inbox-time { font-size: 11px; font-weight: 700; color: var(--text-sub); margin-left: 10px; }
+        .badge-red-circle { background: var(--t1-color); color: white; border-radius: 50%; padding: 2px 6px; font-size: 10px; font-weight: 900; position: absolute; top: -5px; right: -5px; display: none; }
+
     </style>
 </head>
 <body>
 
+<div id="tourOverlay" class="tour-overlay"></div>
+<div id="tourDialog" class="tour-dialog">
+    <img src="https://api.dicebear.com/7.x/bottts/svg?seed=Neo&backgroundColor=transparent" class="tour-robot-img" alt="Neo">
+    <div class="tour-title" id="tourTitle">Selam! Ben NEO.</div>
+    <div class="tour-text" id="tourText">Sana Me Games Academy'nin efsane dünyasını gezdireyim mi? Sadece 1 dakikanı alacak.</div>
+    <div class="tour-buttons">
+        <button class="tour-btn tour-btn-skip" onclick="endTour()">Atla gitsin</button>
+        <button class="tour-btn tour-btn-next" id="tourNextBtn" onclick="nextTourStep()">Bana Öğret</button>
+    </div>
+</div>
+
 <audio id="bgMusic" loop><source src="lofi-bg.mp3" type="audio/mpeg"></audio>
+
+<div id="dynamicIsland" class="dynamic-island hidden-island">
+    <div class="di-content" id="diContent"><i class="fas fa-robot"></i> <span id="diText">MeBot düşünüyor...</span></div>
+    <div class="di-progress-bar"><div class="di-progress-fill" id="diFill"></div></div>
+</div>
 
 <div id="splash-screen"><img src="image.png" alt="Me Games English" class="splash-logo"></div>
 
-<div id="screenWelcome">
+<div id="screenUpdates" class="hidden-updates">
+    <div class="card" style="max-width: 600px; padding: 30px; border-color: var(--boost-blue); max-height: 90vh; overflow-y: auto;">
+        <h1 class="modal-title" style="color: var(--boost-blue); font-size: 32px; margin-bottom: 10px;">
+            <i class="fas fa-magic"></i> Me Games Academy
+        </h1>
+        <p style="color:var(--text-main); font-weight: 800; font-size: 18px;">Sürüm Ultimate v1.50 Güncellemeleri</p>
+        <p style="color:var(--text-sub); font-size: 14px; margin-bottom: 15px;">Neler Yeni? İşte oyuna eklenen son efsane özellikler:</p>
+        
+        <ul class="update-list">
+            <li><i class="fas fa-hat-wizard"></i> <div><strong>Şapka XP Bonusları:</strong> Marketten aldığın şapkalar artık sadece süs değil! Kuşandığın eşyaya göre her doğru kelimede **+5 ile +40 arası Bonus XP** kazanacaksın! <span class="update-tag-new">v1.50</span></div></li>
+            <li><i class="fas fa-comments"></i> <div><strong>Özel Mesaj (DM):</strong> Artık profiller üzerinden arkadaşlarına özel mesaj atabilirsin! <span class="update-tag-new">v1.40</span></div></li>
+            <li><i class="fas fa-user-circle"></i> <div><strong>Hazır Avatarlar:</strong> Profil fotoğrafını değiştirirken kullanabileceğin havalı hazır robotlar eklendi. <span class="update-tag-new">v1.40</span></div></li>
+            <li><i class="fas fa-id-card"></i> <div><strong>Profil & Rank Sistemi:</strong> Herkesin kendine ait havalı bir profili ve yeteneğine göre bir rütbesi (Rank) var! <span class="update-tag-new" style="background:#8b5cf6;">v1.30</span></div></li>
+            <li><i class="fas fa-flask"></i> <div><strong>Mavi x2 Combo İksiri:</strong> Hataları tamamen giderildi, kombo bonuslarını 45 saniye boyunca %100 oranında katlıyor! <span class="update-tag-new" style="background:#8b5cf6;">v1.30</span></div></li>
+        </ul>
+
+        <button class="btn-main" style="width: 100%; background: var(--boost-blue);" onclick="closeUpdatesAndShowWelcome()">
+            Harika, Başlayalım! <i class="fas fa-arrow-right"></i>
+        </button>
+    </div>
+</div>
+
+<div id="screenWelcome" class="hidden-welcome">
     <div class="welcome-left">
-        <img src="kitap.png" alt="English Book" class="book-img">
     </div>
     <div class="welcome-right">
         <h1 class="welcome-title">Hoşgeldiniz</h1>
         <p class="welcome-subtitle">Eğlenerek öğrenmeye hazır mısın?</p>
         
+        <div class="welcome-notice"><i class="fas fa-shield-alt"></i> Hile Koruması Aktif: Puanlar yalnızca "Bot'a Karşı" modunda kaydedilir.</div>
+
+        <div class="welcome-privacy-box">
+            <input type="checkbox" id="welcomePrivacyCheck">
+            <label for="welcomePrivacyCheck">
+                <a onclick="openPrivacyModal()">Gizlilik Politikası</a>'nı okudum ve tüm şartları kabul ediyorum.
+            </label>
+        </div>
+
         <div class="welcome-buttons">
             <button class="btn-welcome btn-start-game" onclick="startGameFromWelcome()">
                 Oyuna Başla <i class="fas fa-play"></i>
             </button>
+            
+            <button class="btn-welcome btn-auth-welcome" id="btnWelcomeAuth" onclick="openAuthModal()">
+                Hesabına Giriş Yap <i class="fas fa-user-circle"></i>
+            </button>
+            
             <button class="btn-welcome btn-tubitak" onclick="openTubitakModal()">
                 TÜBİTAK Projemizin Amacı <i class="fas fa-microscope"></i>
+            </button>
+
+            <button class="btn-welcome btn-about" onclick="openAboutModal()">
+                Geliştirici Hakkında <i class="fas fa-id-card"></i>
             </button>
         </div>
 
@@ -224,53 +419,234 @@
     </div>
 </div>
 
+<div id="aboutModal" class="modal-overlay hidden">
+    <div class="modal-content" style="max-width: 500px; text-align: left; max-height: 85vh; overflow-y: auto;">
+        <button class="close-modal-btn" onclick="closeAboutModal()">&times;</button>
+        <h2 class="modal-title" style="text-align: center; color: #a855f7;"><i class="fas fa-laptop-code"></i> Geliştirici Hakkında</h2>
+        
+        <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 2px solid var(--border);">
+            <img src="https://api.dicebear.com/7.x/bottts/svg?seed=Emir" style="width: 80px; height: 80px; border-radius: 50%; border: 3px solid #a855f7; background: var(--bg-body);">
+            <div>
+                <h3 style="font-weight: 900; color: var(--text-main); font-size: 20px;">Muhammed Emir Turhan</h3>
+                <p style="color: var(--text-sub); font-size: 14px; font-weight: 600;">Junior Software Developer</p>
+            </div>
+        </div>
+
+        <div style="font-size: 14px; color: var(--text-main); line-height: 1.6;">
+            <p>Merhaba! Ben Emir, bu platformun geliştiricisiyim.</p>
+            <p style="margin-top: 10px;">Me Games Academy projesini, İngilizce kelime öğrenimini sıkıcı kitap sayfalarından kurtarıp, oyunlaştırma (gamification) teknikleriyle daha eğlenceli ve rekabetçi bir hale getirmek amacıyla tasarladım.</p>
+            <p style="margin-top: 10px;">Proje süreçlerim, güncellemeler ve daha fazlası için bana Instagram hesabımdan ulaşabilirsin!</p>
+            
+            <a href="https://instagram.com/memirturhan" target="_blank" class="btn-instagram">
+                <i class="fab fa-instagram" style="font-size: 20px;"></i> Instagram'da Takip Et
+            </a>
+        </div>
+        
+        <button class="btn-main" onclick="closeAboutModal()" style="width: 100%; margin-top: 20px; background: #a855f7;">Kapat</button>
+    </div>
+</div>
+
+<div id="profileModal" class="modal-overlay hidden">
+    <div class="modal-content" style="max-width: 350px; padding: 30px;">
+        <button class="close-modal-btn" onclick="closeProfileModal()">&times;</button>
+        <div class="profile-header">
+            <img id="profileAvatar" src="" class="profile-avatar" onclick="openAvatarModal()">
+            <div id="profilePicHint" style="font-size:10px; color:var(--text-sub); margin-top:-5px; margin-bottom:10px; display:none;">(Değiştirmek için fotoğrafa tıkla)</div>
+            <h2 id="profileName" style="color:var(--text-main); font-weight:900; margin-bottom:10px; font-size:22px;">İsim</h2>
+            <div id="profileRank" class="rank-badge">Rank</div>
+        </div>
+        <div style="background:var(--bg-body); border-radius:15px; padding:15px; margin-top:20px; text-align:left; border:1px solid var(--border);">
+            <p><strong><i class="fas fa-star" style="color:var(--points-color)"></i> Toplam XP:</strong> <span id="profileXP" style="font-weight:800; color:var(--text-main);">0</span></p>
+            <p style="margin-top:12px;"><strong><i class="fas fa-hat-cowboy"></i> Şapka:</strong> <span id="profileHat" style="font-weight:700;">Yok</span></p>
+            <p style="margin-top:12px; font-size:12px; color:var(--text-sub);" id="profileEmailContainer"><strong><i class="fas fa-envelope"></i> Email:</strong> <span id="profileEmail">gizli</span></p>
+        </div>
+        <button class="btn-main" id="btnProfileDM" style="width:100%; margin-top:15px; background:var(--boost-blue); display:none;"><i class="fas fa-paper-plane"></i> Mesaj Gönder</button>
+        <button class="btn-main" id="btnProfileLogout" style="width:100%; margin-top:15px; background:var(--t1-color); display:none;" onclick="logoutFromProfile()">Çıkış Yap <i class="fas fa-sign-out-alt"></i></button>
+    </div>
+</div>
+
+<div id="avatarModal" class="modal-overlay hidden" style="z-index: 10005;">
+    <div class="modal-content" style="max-width: 450px;">
+        <button class="close-modal-btn" onclick="closeAvatarModal()">&times;</button>
+        <h2 class="modal-title"><i class="fas fa-user-astronaut"></i> Profil Fotoğrafı</h2>
+        <p style="color: var(--text-sub); font-size: 14px; margin-bottom: 20px;">Aşağıdan bir avatar seç veya kendi fotoğraf linkini yapıştır.</p>
+        
+        <div class="avatar-grid" id="avatarPresetGrid" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 25px; justify-items: center;"></div>
+        
+        <div style="text-align: center; font-size: 12px; color: var(--text-sub); font-weight: 800; margin-bottom: 10px;">VEYA LİNK YAPIŞTIR (.jpg, .png)</div>
+        <input type="text" id="customAvatarLink" class="auth-input" placeholder="http://resim.com/foto.jpg" style="padding: 10px;">
+        <button class="btn-main" onclick="setCustomAvatar()" style="width:100%; padding: 12px; background: var(--success);"><i class="fas fa-save"></i> Özel Fotoğrafı Kaydet</button>
+    </div>
+</div>
+
+<div id="chatModal" class="modal-overlay hidden" style="z-index: 10002;">
+    <div class="modal-content" style="max-width: 450px; height: 80vh; display: flex; flex-direction: column; padding: 25px;">
+        <button class="close-modal-btn" onclick="closeChat()">&times;</button>
+        <h2 class="modal-title" style="color: var(--boost-blue); margin-bottom: 10px; font-size: 20px; display: flex; align-items: center; justify-content: center; gap: 10px;">
+            <i class="fas fa-comments"></i> <span id="chatWithTitle">Kişi Adı</span>
+        </h2>
+        
+        <div id="chatMessages" style="flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; padding: 15px; background: var(--bg-body); border-radius: 16px; border: 1px solid var(--border); margin-bottom: 15px;">
+        </div>
+        
+        <div style="display: flex; gap: 8px;">
+            <input type="text" id="chatInput" class="auth-input" style="margin-bottom: 0; flex: 1; border-color: var(--boost-blue); padding: 12px;" placeholder="Mesajını yaz..." onkeypress="if(event.key === 'Enter') sendMessage()">
+            <button class="btn-main" onclick="sendMessage()" style="padding: 12px 20px; background: var(--boost-blue);"><i class="fas fa-paper-plane"></i></button>
+        </div>
+    </div>
+</div>
+
+<div id="inboxModal" class="modal-overlay hidden" style="z-index: 10001;">
+    <div class="modal-content inbox-modal" style="max-width: 500px; max-height: 80vh; display: flex; flex-direction: column;">
+        <button class="close-modal-btn" onclick="closeInbox()">&times;</button>
+        <h2 class="modal-title" style="color: var(--boost-blue);"><i class="fas fa-inbox"></i> Gelen Kutusu</h2>
+        <div id="inboxList" style="flex: 1; overflow-y: auto; padding-right: 5px; margin-top: 15px;">
+        </div>
+    </div>
+</div>
+
+<div id="marketModal" class="modal-overlay hidden">
+    <div class="modal-content" style="max-width: 600px; max-height: 85vh; display: flex; flex-direction: column;">
+        <button class="close-modal-btn" onclick="closeMarket()">&times;</button>
+        <h2 class="modal-title" style="color: #ec4899; margin-bottom: 10px;"><i class="fas fa-store"></i> Me Market</h2>
+        <p style="color: var(--text-sub); font-size: 14px; margin-bottom: 5px;">Kastığın XP'leri burada harca, kelimene fiyaka kat!</p>
+        <div style="background: rgba(245, 158, 11, 0.1); color: var(--points-color); font-weight: 800; padding: 10px; border-radius: 12px; border: 1px solid rgba(245, 158, 11, 0.3); margin-bottom: 15px;">Sahip Olduğun: <span id="marketCurrentXP">0</span> XP</div>
+        <div class="market-grid" id="marketList"></div>
+    </div>
+</div>
+
+<div id="leaderboardModal" class="modal-overlay hidden">
+    <div class="modal-content" style="max-width: 500px; max-height: 85vh; overflow-y: hidden; display: flex; flex-direction: column;">
+        <button class="close-modal-btn" onclick="closeLeaderboard()">&times;</button>
+        <h2 class="modal-title" style="color: var(--points-color); margin-bottom: 10px;"><i class="fas fa-crown"></i> Liderlik Tablosu</h2>
+        <p style="color: var(--text-sub); font-size: 14px; margin-bottom: 20px;">İncelemek istediğin kişinin üstüne tıkla!</p>
+        <div id="leaderboardList" style="flex: 1; overflow-y: auto; text-align: left; padding-right: 5px;"></div>
+    </div>
+</div>
+
+<div id="adminModal" class="modal-overlay hidden">
+    <div class="modal-content" style="max-width: 800px; max-height: 90vh; overflow-y: hidden; display: flex; flex-direction: column;">
+        <button class="close-modal-btn" onclick="closeAdminPanel()">&times;</button>
+        <h2 class="modal-title" style="color: var(--admin-red); margin-bottom: 10px;"><i class="fas fa-user-secret"></i> God Mode Admin Paneli</h2>
+        <div id="adminUserList" style="flex: 1; overflow-y: auto; text-align: left; padding-right: 5px;"></div>
+    </div>
+</div>
+
+<div id="onlineUsersModal" class="modal-overlay hidden">
+    <div class="modal-content" style="max-width: 400px; max-height: 80vh; overflow-y: auto;">
+        <button class="close-modal-btn" onclick="closeOnlineModal()">&times;</button>
+        <h2 class="modal-title" style="color: var(--success);"><i class="fas fa-users"></i> Aktif Olanlar</h2>
+        <p style="color: var(--text-sub); font-size: 14px; margin-bottom: 20px;">Profili görmek veya mesaj atmak için üstüne tıkla.</p>
+        <div id="onlineUsersList" style="text-align: left;"></div>
+    </div>
+</div>
+
 <div id="tubitakModal" class="modal-overlay hidden">
     <div class="modal-content">
+        <button class="close-modal-btn" onclick="closeTubitakModal()">&times;</button>
         <h2 class="modal-title"><i class="fas fa-lightbulb"></i> Proje Amacımız</h2>
-        <p class="modal-text">
-            Bu projenin amacı, İngilizce kelime öğrenimini sıradan bir ezber süreci olmaktan çıkarıp; rekabetçi, eğlenceli ve teknolojiyle iç içe bir oyun deneyimine dönüştürmektir. Sınıf içi etkileşimi artırarak kalıcı öğrenmeyi hedefler.
-        </p>
-        <button class="btn-main" onclick="closeTubitakModal()" style="width: 100%;">Anladım, Kapat</button>
+        <p class="modal-text">Bu projenin amacı, İngilizce kelime öğrenimini sıkıcı kitap sayfalarından kurtarıp, eğlenceli ve teknolojiyle iç içe bir dijital oyun deneyimine dönüştürmektir.</p>
+    </div>
+</div>
+
+<div id="privacyModal" class="modal-overlay hidden">
+    <div class="modal-content" style="max-width: 600px; max-height: 85vh; text-align: left;">
+        <button class="close-modal-btn" onclick="closePrivacyModal()">&times;</button>
+        <h2 class="modal-title" style="text-align:center;"><i class="fas fa-shield-alt"></i> Gizlilik ve Kullanım Politikası</h2>
+        <div style="font-size: 13px; color: var(--text-main); line-height: 1.7; overflow-y: auto; padding-right: 10px;">
+            <p><strong>1. Veri Toplama ve İşleme:</strong> Me Games Academy platformuna kayıt olduğunuzda, kullanıcı adınız, e-posta adresiniz, oyun içi kazandığınız XP puanları, avatar seçimleriniz ve sohbet (DM) geçmişiniz Firebase bulut sunucularında güvenli bir şekilde saklanmaktadır.</p>
+            <p style="margin-top:10px;"><strong>2. Liderlik Tablosu ve Görünürlük:</strong> Oyunda kazandığınız XP'ler, "Bot'a Karşı" modunda kaydedilir. Puanlarınız herkese açık Liderlik Tablosunda profil fotoğrafınız ve kullanıcı adınızla birlikte sergilenir.</p>
+            <p style="margin-top:10px;"><strong>3. İletişim ve Sohbet (DM) Güvenliği:</strong> Platform içi mesajlaşma sistemindeki yazışmalarınız veri tabanımızda tutulur. Spam, hakaret, argo veya rahatsız edici içerik paylaşımı durumunda hesaplarınız kalıcı olarak uzaklaştırılabilir (Banlanabilir).</p>
+            <p style="margin-top:10px;"><strong>4. Çerezler ve Yerel Depolama:</strong> Tema tercihiniz (Dark/Light Mode) cihazınızın yerel depolamasında tutulur. Harici bir reklam çerezi kullanılmamaktadır.</p>
+            <p style="margin-top:10px; color: var(--t1-color); font-weight: 700;">Bu oyuna giriş yaparak, verilerinizin oyun deneyimini geliştirmek amacıyla sunucularımızda saklanmasını kabul etmiş sayılırsınız.</p>
+        </div>
+        <button class="btn-main" onclick="closePrivacyModal()" style="width: 100%; margin-top: 20px;">Okudum, Kabul Ediyorum</button>
+    </div>
+</div>
+
+<div id="authModal" class="modal-overlay hidden">
+    <div class="modal-content" style="max-width: 400px;">
+        <button class="close-modal-btn" onclick="closeAuthModal()">&times;</button>
+        
+        <div id="loginFormBlock">
+            <h2 class="modal-title"><i class="fas fa-sign-in-alt"></i> Giriş Yap</h2>
+            <input type="email" id="loginEmail" placeholder="E-posta Adresin" class="auth-input">
+            <input type="password" id="loginPass" placeholder="Şifren" class="auth-input">
+            <div style="text-align: right; margin-bottom: 10px;">
+                <a class="auth-link" style="font-size: 13px;" onclick="toggleForgotPassword(true)">Şifremi Unuttum?</a>
+            </div>
+            <button class="btn-main" onclick="handleLogin()" style="width: 100%;">Giriş Yap</button>
+            <p style="margin-top: 20px; color: var(--text-sub);">Hesabın yok mu? <a class="auth-link" onclick="toggleAuthMode(true)">Kayıt Ol</a></p>
+        </div>
+
+        <div id="registerFormBlock" style="display:none;">
+            <h2 class="modal-title"><i class="fas fa-user-plus"></i> Kayıt Ol</h2>
+            <input type="text" id="regUsername" placeholder="Kullanıcı Adı (Örn: Emir)" class="auth-input">
+            <input type="email" id="regEmail" placeholder="E-posta Adresin" class="auth-input">
+            <input type="password" id="regPass" placeholder="Şifre (En az 6 haneli)" class="auth-input">
+            <button class="btn-main" onclick="handleRegister()" style="width: 100%; margin-top: 15px; background: var(--success);">Hesap Oluştur</button>
+            <p style="margin-top: 20px; color: var(--text-sub);">Zaten hesabın var mı? <a class="auth-link" onclick="toggleAuthMode(false)">Giriş Yap</a></p>
+        </div>
+
+        <div id="forgotPasswordBlock" style="display:none;">
+            <h2 class="modal-title"><i class="fas fa-key"></i> Şifre Sıfırlama</h2>
+            <p style="font-size: 13px; color: var(--text-sub); margin-bottom: 15px;">Kayıtlı e-posta adresini gir. Sana şifreni sıfırlayıp diğer cihazlardan çıkış yapmanı sağlayacak güvenli bir bağlantı göndereceğiz.</p>
+            <input type="email" id="resetEmail" placeholder="E-posta Adresin" class="auth-input">
+            <button class="btn-main" onclick="handleForgotPassword()" style="width: 100%; background: var(--t1-color);">Sıfırlama Linki Gönder</button>
+            <p style="margin-top: 20px; color: var(--text-sub);"><a class="auth-link" onclick="toggleForgotPassword(false)">Giriş Ekranına Dön</a></p>
+        </div>
     </div>
 </div>
 
 <header>
     <div class="logo-area">
-        <div class="control-btn" onclick="goBack()" title="Geri Dön" id="btnBack" style="display: none;">
-            <i class="fas fa-arrow-left"></i>
-        </div>
-        <div class="logo"><i class="fas fa-graduation-cap"></i> Me Games</div>
+        <div class="control-btn" onclick="goBack()" title="Geri Dön" id="btnBack" style="display: none;"><i class="fas fa-arrow-left"></i></div>
+        <div class="logo" onclick="fullReset()"><i class="fas fa-graduation-cap"></i> <span class="hide-mobile">Me Games</span></div>
     </div>
     <div class="controls">
+        <div class="control-btn hidden" onclick="openAdminPanel()" id="btnAdminPanel"><i class="fas fa-user-secret"></i> <span class="hide-mobile">Admin</span></div>
+        <div class="control-btn" onclick="openMarket()" id="btnMarket"><i class="fas fa-shopping-bag"></i> <span class="hide-mobile">Market</span></div>
+        
+        <div class="control-btn" onclick="openInbox()" id="btnInbox" style="display: none; position: relative; border-color: var(--boost-blue); color: var(--boost-blue); font-weight: 800;">
+            <i class="fas fa-envelope"></i> <span class="hide-mobile">Mesajlar</span>
+            <div id="unreadBadge" class="badge-red-circle">0</div>
+        </div>
+
+        <div class="control-btn" onclick="openOnlineModal()" id="btnOnlineStatus"><div class="pulse-green-dot"></div> <span id="onlineCountText" class="hide-mobile">0 Aktif</span></div>
+        <div class="control-btn" onclick="openLeaderboard()" id="btnLeaderboard"><i class="fas fa-trophy"></i> <span class="hide-mobile">Sıralama</span></div>
+        
+        <div class="control-btn" onclick="handleHeaderAuthClick()" id="btnAuth" style="border-color: var(--primary);">
+            <i class="fas fa-user" id="authIcon"></i> 
+            <img id="headerAvatar" src="" style="width:20px; height:20px; border-radius:50%; display:none; margin-right:5px; border:1px solid var(--primary);">
+            <span id="authText" class="hide-mobile">Giriş Yap</span>
+            <span id="userPointsDisplay" class="user-points-badge" style="display: none;">0 Puan</span>
+        </div>
+        
         <div class="control-btn" onclick="toggleSound()" title="Sesi Aç/Kapat" id="btnSound"><i class="fas fa-volume-up"></i></div>
         <div class="control-btn" onclick="toggleFullScreen()" title="Tam Ekran" id="btnFullscreen"><i class="fas fa-expand"></i></div>
-        <div class="control-btn" onclick="fullReset()" title="Ana Menü"><i class="fas fa-home"></i></div>
-        <div class="control-btn" onclick="toggleTheme()" id="btnTheme"><i class="fas fa-moon"></i> <span>Dark</span></div>
+        <div class="control-btn" onclick="toggleTheme()" id="btnTheme"><i class="fas fa-moon"></i> <span class="hide-mobile">Dark</span></div>
     </div>
 </header>
 
 <div class="container">
     <div id="screenDevice" class="card">
         <h1>Cihazını Seç</h1>
-        <p style="color:var(--text-sub);">Hangi platformdan bağlanıyorsun?</p>
         <div class="big-selection-grid">
             <button class="big-btn" onclick="selectDevice('pc')"><i class="fas fa-desktop"></i> Akıllı Tahta / PC</button>
-            <button class="big-btn" onclick="selectDevice('mobile')"><i class="fas fa-mobile-alt"></i> Mobil Aygıt</button>
+            <button class="big-btn" onclick="selectDevice('mobile')"><i class="fas fa-mobile-alt"></i> Mobil Aygıt <span class="info-badge badge-green">🏆 Puan Kazandırır</span></button>
         </div>
     </div>
 
     <div id="screenMode" class="card hidden">
         <h1>Oyun Modu</h1>
-        <p style="color:var(--text-sub);">Nasıl oynamak istersin?</p>
         <div class="big-selection-grid">
-            <button class="big-btn" onclick="selectMode('1p')"><i class="fas fa-robot"></i> Tek Kişilik<br><span style="font-size: 14px; font-weight: 600;">(Bot'a Karşı)</span></button>
-            <button class="big-btn" onclick="selectMode('2p')"><i class="fas fa-users"></i> İki Kişilik<br><span style="font-size: 14px; font-weight: 600;">(Sınıf Modu)</span></button>
+            <button class="big-btn" onclick="selectMode('1p')"><i class="fas fa-robot"></i> Tek Kişilik<br><span style="font-size: 14px; font-weight: 600;">(Bot'a Karşı)</span> <span class="info-badge badge-green">🏆 Puan Kazandırır</span></button>
+            <button class="big-btn" onclick="selectMode('2p')"><i class="fas fa-users"></i> İki Kişilik<br><span style="font-size: 14px; font-weight: 600;">(Sınıf Modu)</span> <span class="info-badge badge-red">⚠️ Puan Kaydedilmez</span></button>
         </div>
     </div>
 
     <div id="screenTeams" class="card hidden">
-        <h1 id="txtWelcome">Kurulum</h1>
-        <p style="color:var(--text-sub); margin-bottom:30px" id="txtDesc">Bilgileri girin</p>
+        <h1 id="txtWelcome">Kurulum</h1><p style="color:var(--text-sub); margin-bottom:30px" id="txtDesc">Bilgileri girin</p>
         <div class="team-setup-grid">
             <div style="text-align:left;" id="p1Setup">
                 <div class="input-wrapper" style="margin-bottom:15px;"><label style="color:var(--t1-color)" id="lblT1">1. Takım Adı</label><input type="text" id="t1Input" placeholder="1. Takım İsmi Girin" value=""></div>
@@ -286,7 +662,6 @@
 
     <div id="screenGrade" class="card hidden">
         <h1>Sınıf Düzeyi</h1>
-        <p style="color:var(--text-sub);">Lütfen oynamak istediğin MEB müfredatını seç.</p>
         <div class="grade-selection-grid">
             <button class="big-btn" style="padding: 20px;" onclick="selectGrade('5')"><i class="fas fa-child"></i> 5. Sınıf</button>
             <button class="big-btn" style="padding: 20px;" onclick="selectGrade('6')"><i class="fas fa-pencil-alt"></i> 6. Sınıf</button>
@@ -295,7 +670,15 @@
         </div>
     </div>
 
-    <div id="screenUnits" class="card hidden"><h1 id="txtSelectUnit">Ünite Seçin</h1><div class="unit-grid" id="unitGrid"></div></div>
+    <div id="screenUnits" class="card hidden">
+        <h1 id="txtSelectUnit">Ünite Seçin</h1>
+        <button id="btnMixedMode" class="btn-main btn-rgb" style="margin-bottom: 20px; width: 100%; max-width: 500px; margin-left: auto; margin-right: auto; display: block;" onclick="toggleMixedMode()"><i class="fas fa-random"></i> Karışık Mod (Çoklu Ünite Seç)</button>
+        <div id="mixedControls" class="hidden" style="margin-bottom: 25px; background: var(--bg-body); padding: 15px; border-radius: 15px; border: 2px dashed var(--primary);">
+            <p style="color:var(--text-main); font-weight: 700; margin-bottom: 15px;">Karıştırmak istediğin üniteleri aşağıdan seç:</p>
+            <button id="btnStartMixed" class="btn-main" style="width: 100%; max-width: 400px; background: var(--success);" onclick="startMixedCompetition()" disabled><i class="fas fa-play"></i> Seçili Ünitelerle Başla (<span id="mixedCount">0</span>)</button>
+        </div>
+        <div class="unit-grid" id="unitGrid"></div>
+    </div>
 
     <div id="screenSelector" class="hidden">
         <h1 style="margin-bottom: 40px;">Sıradaki Oyuncular</h1>
@@ -307,20 +690,24 @@
     </div>
 
     <div id="screenGame" class="hidden">
-        <div id="dynamicIsland" class="dynamic-island hidden-island">
-            <div class="di-content" id="diContent">
-                <i class="fas fa-robot"></i> <span id="diText">MeBot düşünüyor...</span>
-            </div>
-            <div class="di-progress-bar"><div class="di-progress-fill" id="diFill"></div></div>
-        </div>
-
         <div id="topScore1P" class="top-scoreboard-1p hidden">
             <span class="p1-sc"><span id="ts1-name-lbl">SEN</span>: <span id="ts1-score">0</span></span>
             <span style="color:var(--border)">|</span>
             <span class="bot-sc"><i class="fas fa-robot"></i> MeBot: <span id="ts2-score">0</span></span>
         </div>
 
-        <div class="central-word-container" id="wordDisplay"><div class="golden-tag">✨ ALTIN SORU ✨</div><span id="wordText">WORD</span></div>
+        <div id="boostPanelContainer" class="boost-panel-container">
+            <div style="color: #60a5fa; font-size: 12px; font-weight: 800; text-shadow: 0 2px 4px rgba(0,0,0,0.5);">🔥 COMBO BOOST 🔥</div>
+            <button id="btnUseBoost" class="btn-boost-action" onclick="activateX2Combo()"><i class="fas fa-bolt"></i> x2 Etkinleştir<div id="boostCountBadge" class="boost-badge">0</div></button>
+            <div id="boostProgressBar" class="boost-timer-bar"><div id="boostProgressFill" class="boost-timer-fill"></div></div>
+        </div>
+
+        <div class="central-word-container" id="wordDisplay">
+            <img id="wordHatImg" class="hat-overlay" src="" alt="Hat">
+            <div class="golden-tag">✨ ALTIN SORU ✨</div>
+            <span id="wordText">WORD</span>
+        </div>
+
         <div class="team-zone team-1-zone"><div class="team-header"><div class="team-name-tag" id="dispT1Name">TAKIM 1</div><div class="score-display" id="score1">0</div><div class="active-player-badge" id="badge1" style="display:none;">Oyuncu #?</div></div><div class="options-column" id="opts1"></div></div>
         <div class="team-zone team-2-zone"><div class="team-header"><div class="team-name-tag" id="dispT2Name">TAKIM 2</div><div class="score-display" id="score2">0</div><div class="active-player-badge" id="badge2" style="display:none;">Oyuncu #?</div></div><div class="options-column" id="opts2"></div></div>
     </div>
@@ -332,12 +719,674 @@
 </div>
 
 <script>
-    let audioCtx = null;
-    try {
-        const AudioContext = window.AudioContext || window.webkitAudioContext;
-        if (AudioContext) audioCtx = new AudioContext();
-    } catch(e) {}
+    const firebaseConfig = { apiKey: "AIzaSyAJuPNAsiu3XCj8ATtD09vAIeJeUpLkCnU", authDomain: "menglishacademy-8c610.firebaseapp.com", projectId: "menglishacademy-8c610", storageBucket: "menglishacademy-8c610.firebasestorage.app", messagingSenderId: "108303300272", appId: "1:108303300272:web:47fd7ec2075bd93bd0ed75", measurementId: "G-QXN0BEY4SQ" };
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.firestore();
+
+    const adminEmails = ["m_emirturhan@outlook.com", "emir@admin.com"];
+
+    // --- GLOBAL DEĞİŞKENLER (EN ÜSTTE) ---
+    let gameMode = '2p'; 
+    let deviceType = 'pc'; 
+    let hasSelectedDevice = false; 
+    let selectedUnit = null, scores = [0, 0], wordPool = [], currentWord = null;
+    let isRoundActive = false, isGoldenQuestion = false; 
+    let t1Size = 15, t2Size = 15, t1Pool = [], t2Pool = []; 
+    let currentP1 = 0, currentP2 = 0; 
+    let comboCount = [0, 0];
+    let aiTimer = null, rollInterval = null, roundTimeout = null, islandTimeout = null, boostTimerInterval = null; 
+    let isMixedMode = false; 
+    let selectedMixedUnits = [];
+    let localTotalPoints = 0; 
+    let localInventory = []; 
+    let localEquippedHat = null; 
+    let localX2BoostCount = 0; 
+    let currentProfileTargetId = null;
+    let isX2ComboActive = false;
     
+    // SOHBET İÇİN GLOBAL DEĞİŞKENLER
+    let currentChatUserId = null;
+    let currentChatId = null;
+    let chatUnsubscribe = null;
+    let inboxGlobalHooked = false;
+
+    // --- EŞYA FİYAT VE GÜÇ DENGELEMESİ ---
+    const marketItems = [
+        { id: "takke", name: "Kral Takkesi", price: 250, img: "takke.png", type: "hat", bonusXP: 5, desc: "Her doğru cevaba +5 XP!" },
+        { id: "fes", name: "Osmanlı Fesi", price: 500, img: "fes.png", type: "hat", bonusXP: 10, desc: "Her doğru cevaba +10 XP!" },
+        { id: "gozluk", name: "Thug Life Gözlüğü", price: 1000, img: "gozluk.png", type: "hat", bonusXP: 15, desc: "Her doğru cevaba +15 XP!" },
+        { id: "kask", name: "Askeri Kask", price: 2000, img: "kask.png", type: "hat", bonusXP: 25, desc: "Her doğru cevaba +25 XP!" },
+        { id: "kulaklik", name: "Gamer Kulaklık", price: 3500, img: "kulaklik.png", type: "hat", bonusXP: 40, desc: "Her doğru cevaba +40 XP!" },
+        { id: "x2_combo", name: "Mavi 2X Combo İksiri", price: 1500, img: "mavi_iksir.png", type: "consumable", desc: "45 sn boyunca x2 Combo Bonusu!" }
+    ];
+
+    // HAZIR AVATAR LİSTESİ
+    const presetAvatarsList = [
+        "https://api.dicebear.com/7.x/bottts/svg?seed=Felix",
+        "https://api.dicebear.com/7.x/bottts/svg?seed=Jasper",
+        "https://api.dicebear.com/7.x/bottts/svg?seed=Chloe",
+        "https://api.dicebear.com/7.x/bottts/svg?seed=Bandit",
+        "https://api.dicebear.com/7.x/bottts/svg?seed=Buster",
+        "https://api.dicebear.com/7.x/adventurer/svg?seed=Destiny",
+        "https://api.dicebear.com/7.x/adventurer/svg?seed=Midnight",
+        "https://api.dicebear.com/7.x/adventurer/svg?seed=Shadow"
+    ];
+
+
+
+    let currentActiveUnits = grade8Units;
+
+    // --- YENİ RANK (RÜTBE) SİSTEMİ ---
+    function getRankData(xp) {
+        if(xp < 500) return { name: "🥉 Bronz Çaylak", color: "linear-gradient(45deg, #cd7f32, #8b5a2b)" };
+        if(xp < 1500) return { name: "🥈 Gümüş Amatör", color: "linear-gradient(45deg, #94a3b8, #64748b)" };
+        if(xp < 3000) return { name: "🥇 Altın Uzman", color: "linear-gradient(45deg, #f59e0b, #d97706)" };
+        if(xp < 6000) return { name: "💎 Elmas Şampiyon", color: "linear-gradient(45deg, #3b82f6, #2563eb)" };
+        return { name: "👑 Efsanevi Avcı", color: "linear-gradient(45deg, #a855f7, #7e22ce)" };
+    }
+
+    // --- KİMLİK DOĞRULAMA (AUTH) İŞLEMLERİ ---
+    auth.onAuthStateChanged(user => {
+        const authBtnText = document.getElementById('authText');
+        const authIcon = document.getElementById('authIcon');
+        const headerAvatar = document.getElementById('headerAvatar');
+        const btnAuth = document.getElementById('btnAuth');
+        const pointsDisplay = document.getElementById('userPointsDisplay');
+        const btnWelcomeAuth = document.getElementById('btnWelcomeAuth'); 
+        
+        if (user) {
+            let dName = user.displayName || user.email.split('@')[0];
+            document.getElementById('t1Input').value = dName;
+            
+            db.collection("users").doc(user.uid).set({ online: true, lastActive: firebase.firestore.FieldValue.serverTimestamp(), username: dName, email: user.email }, { merge: true });
+
+            if(adminEmails.includes(user.email.toLowerCase())) { document.getElementById('btnAdminPanel').classList.remove('hidden'); } 
+            else { document.getElementById('btnAdminPanel').classList.add('hidden'); }
+            document.getElementById('btnMarket').style.display = 'flex'; 
+
+            db.collection("users").doc(user.uid).onSnapshot((doc) => {
+                if (doc.exists) {
+                    const data = doc.data();
+                    localTotalPoints = data.totalPoints || 0; 
+                    localInventory = data.inventory || []; 
+                    localEquippedHat = data.equippedHat || null; 
+                    localX2BoostCount = (data.boosts && data.boosts.x2) ? data.boosts.x2 : 0;
+                    
+                    let pPic = data.profilePic || `https://api.dicebear.com/7.x/bottts/svg?seed=${dName}`;
+
+                    // HEADER AYARLARI
+                    authIcon.style.display = 'none'; 
+                    headerAvatar.style.display = 'inline-block'; 
+                    headerAvatar.src = pPic;
+                    if(adminEmails.includes(user.email.toLowerCase())) { authBtnText.innerHTML = `<span class="admin-glow">${dName}</span>`; } else { authBtnText.textContent = dName; }
+                    pointsDisplay.style.display = 'inline-block'; pointsDisplay.innerHTML = `<i class="fas fa-star"></i> ${localTotalPoints} XP`;
+
+                    // GİRİŞ EKRANI (WELCOME) BUTON AYARI
+                    if(btnWelcomeAuth) {
+                        btnWelcomeAuth.innerHTML = `<img src="${pPic}" class="mini-avatar"> Profilim: <b>${dName}</b> (${localTotalPoints} XP)`;
+                        btnWelcomeAuth.style.borderColor = "var(--primary)"; btnWelcomeAuth.style.color = "var(--primary)";
+                        btnWelcomeAuth.onclick = () => openProfile(user.uid); 
+                    }
+
+                    updateHatDisplay(); updateBoostUI();
+                    if(!document.getElementById('marketModal').classList.contains('hidden')) { document.getElementById('marketCurrentXP').textContent = localTotalPoints; renderMarket(); }
+                }
+            });
+        } else {
+            authIcon.style.display = 'inline-block'; headerAvatar.style.display = 'none'; authBtnText.textContent = "Giriş Yap"; pointsDisplay.style.display = 'none';
+            if(btnWelcomeAuth) {
+                btnWelcomeAuth.innerHTML = `Hesabına Giriş Yap <i class="fas fa-user-circle"></i>`;
+                btnWelcomeAuth.style.borderColor = "var(--t2-color)"; btnWelcomeAuth.style.color = "var(--t2-color)";
+                btnWelcomeAuth.onclick = () => openAuthModal();
+            }
+            document.getElementById('t1Input').value = ""; btnAuth.style.borderColor = "var(--primary)"; btnAuth.style.background = "var(--bg-body)";
+            document.getElementById('btnAdminPanel').classList.add('hidden'); document.getElementById('btnMarket').style.display = 'none'; 
+            localTotalPoints = 0; localInventory = []; localEquippedHat = null; localX2BoostCount = 0; updateHatDisplay();
+        }
+    });
+
+    document.addEventListener("visibilitychange", () => { if(auth.currentUser) db.collection("users").doc(auth.currentUser.uid).set({ online: document.visibilityState === 'visible' }, { merge: true }); });
+
+    // --- PROFİL SİSTEMİ ---
+    function openProfile(targetUid) {
+        playSafeSound('click');
+        currentProfileTargetId = targetUid;
+        const modal = document.getElementById('profileModal');
+        const pAvatar = document.getElementById('profileAvatar');
+        const pName = document.getElementById('profileName');
+        const pRank = document.getElementById('profileRank');
+        const pXP = document.getElementById('profileXP');
+        const pHat = document.getElementById('profileHat');
+        const pEmail = document.getElementById('profileEmail');
+        const hint = document.getElementById('profilePicHint');
+        const logoutBtn = document.getElementById('btnProfileLogout');
+        const dmBtn = document.getElementById('btnProfileDM');
+
+        modal.classList.remove('hidden');
+        pName.textContent = "Yükleniyor..."; pXP.textContent = "..."; pHat.textContent = "...";
+
+        db.collection("users").doc(targetUid).get().then(doc => {
+            if(doc.exists) {
+                const data = doc.data();
+                let cleanName = data.username || "Oyuncu";
+                let uName = cleanName;
+                if(adminEmails.includes((data.email || "").toLowerCase())) uName = `<i class="fas fa-user-secret admin-shield"></i> <span class="admin-glow">${uName}</span>`;
+                
+                let points = data.totalPoints || 0;
+                let rankData = getRankData(points);
+
+                pName.innerHTML = uName;
+                pXP.textContent = points;
+                pRank.textContent = rankData.name;
+                pRank.style.background = rankData.color;
+
+                pAvatar.src = data.profilePic || `https://api.dicebear.com/7.x/bottts/svg?seed=${data.username || "Player"}`;
+
+                let hatName = "Yok";
+                if(data.equippedHat) { let fHat = marketItems.find(i => i.id === data.equippedHat); if(fHat) hatName = fHat.name; }
+                pHat.textContent = hatName;
+
+                if(auth.currentUser && auth.currentUser.uid === targetUid) {
+                    pEmail.textContent = data.email;
+                    document.getElementById('profileEmailContainer').style.display = 'block';
+                    hint.style.display = 'block';
+                    pAvatar.classList.add('editable');
+                    logoutBtn.style.display = 'block';
+                    dmBtn.style.display = 'none';
+                } else {
+                    pEmail.textContent = "***@***.com";
+                    document.getElementById('profileEmailContainer').style.display = 'none';
+                    hint.style.display = 'none';
+                    pAvatar.classList.remove('editable');
+                    logoutBtn.style.display = 'none';
+                    
+                    if(auth.currentUser) {
+                        dmBtn.style.display = 'block';
+                        dmBtn.onclick = () => { closeProfileModal(); openChat(targetUid, cleanName); };
+                    } else {
+                        dmBtn.style.display = 'none';
+                    }
+                }
+            }
+        });
+    }
+
+    function closeProfileModal() { playSafeSound('click'); document.getElementById('profileModal').classList.add('hidden'); }
+
+    // --- AVATAR SEÇİM SİSTEMİ ---
+    function openAvatarModal() {
+        if(!auth.currentUser || currentProfileTargetId !== auth.currentUser.uid) return;
+        playSafeSound('click');
+        closeProfileModal();
+        
+        const grid = document.getElementById('avatarPresetGrid');
+        grid.innerHTML = '';
+        presetAvatarsList.forEach(url => {
+            const img = document.createElement('img');
+            img.src = url;
+            img.className = 'avatar-option';
+            img.onclick = () => saveAvatarToDB(url);
+            grid.appendChild(img);
+        });
+        document.getElementById('customAvatarLink').value = "";
+        document.getElementById('avatarModal').classList.remove('hidden');
+    }
+
+    function closeAvatarModal() { playSafeSound('click'); document.getElementById('avatarModal').classList.add('hidden'); }
+
+    function setCustomAvatar() {
+        const link = document.getElementById('customAvatarLink').value.trim();
+        if(link !== "") { saveAvatarToDB(link); }
+    }
+
+    function saveAvatarToDB(url) {
+        if(!auth.currentUser) return;
+        playSafeSound('click');
+        db.collection("users").doc(auth.currentUser.uid).update({ profilePic: url }).then(() => {
+            closeAvatarModal();
+            showDynamicIsland(false, false, false, "success", "Profil fotoğrafın güncellendi!");
+        });
+    }
+
+    function handleHeaderAuthClick() { if(auth.currentUser) openProfile(auth.currentUser.uid); else openAuthModal(); }
+
+    function logoutFromProfile() {
+        if(confirm("Çıkış yapmak istediğine emin misin?")) {
+            db.collection("users").doc(auth.currentUser.uid).set({ online: false }, { merge: true }).then(() => {
+                auth.signOut().then(() => { closeProfileModal(); showDynamicIsland(false, false, false, "info", "Çıkış Yapıldı"); });
+            });
+        }
+    }
+
+    // --- ÖZEL MESAJ VE GELEN KUTUSU (INBOX) SİSTEMİ ---
+    setInterval(() => {
+        const btnInbox = document.getElementById('btnInbox');
+        if(auth.currentUser && !inboxGlobalHooked) {
+            inboxGlobalHooked = true;
+            if(btnInbox) btnInbox.style.display = 'flex';
+            
+            db.collection("users").doc(auth.currentUser.uid).collection("inbox")
+              .orderBy("timestamp", "desc").onSnapshot(snap => {
+                let unreadTotal = 0;
+                let listHtml = "";
+                
+                if(snap.empty) {
+                    listHtml = '<div style="text-align:center; color:var(--text-sub); margin-top:20px;">Henüz kimseyle mesajlaşmadın.</div>';
+                }
+                
+                snap.docChanges().forEach(change => {
+                    if (change.type === "added" || change.type === "modified") {
+                        const data = change.doc.data();
+                        if(data.unread && change.type === "modified" && currentChatUserId !== change.doc.id) {
+                            playSafeSound('golden');
+                            showDynamicIsland(false, false, false, "info", `🔔 ${data.targetName} mesaj attı!`);
+                        }
+                    }
+                });
+
+                snap.forEach(doc => {
+                    const data = doc.data();
+                    if(data.unread && currentChatUserId === doc.id) {
+                        db.collection("users").doc(auth.currentUser.uid).collection("inbox").doc(doc.id).update({unread: false});
+                    } else if (data.unread) {
+                        unreadTotal++;
+                    }
+                    
+                    const timeStr = data.timestamp ? new Date(data.timestamp.toDate()).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : "";
+                    const bgClass = data.unread ? "unread" : "";
+                    
+                    listHtml += `
+                        <div class="inbox-item ${bgClass}" onclick="closeInbox(); openChat('${doc.id}', '${data.targetName}')">
+                            <img src="https://api.dicebear.com/7.x/bottts/svg?seed=${data.targetName}" style="width:40px; height:40px; border-radius:50%; border: 2px solid var(--boost-blue); background: var(--bg-body);">
+                            <div class="inbox-details">
+                                <div class="inbox-name">${data.targetName}</div>
+                                <div class="inbox-msg">${data.lastMessage}</div>
+                            </div>
+                            <div class="inbox-time">${timeStr}</div>
+                        </div>
+                    `;
+                });
+                
+                const badge = document.getElementById('unreadBadge');
+                if(badge) {
+                    badge.style.display = unreadTotal > 0 ? 'block' : 'none';
+                    badge.textContent = unreadTotal;
+                }
+                const inboxList = document.getElementById('inboxList');
+                if(inboxList) inboxList.innerHTML = listHtml;
+            });
+        } else if (!auth.currentUser && inboxGlobalHooked) {
+            inboxGlobalHooked = false;
+            if(btnInbox) btnInbox.style.display = 'none';
+        }
+    }, 2000);
+
+    function openInbox() {
+        playSafeSound('click');
+        document.getElementById('inboxModal').classList.remove('hidden');
+    }
+
+    function closeInbox() {
+        playSafeSound('click');
+        document.getElementById('inboxModal').classList.add('hidden');
+    }
+
+    function openChat(targetUid, targetName) {
+        if(!auth.currentUser) return;
+        playSafeSound('click');
+        currentChatUserId = targetUid;
+        document.getElementById('chatWithTitle').innerHTML = targetName;
+        document.getElementById('chatInput').value = "";
+        document.getElementById('chatModal').classList.remove('hidden');
+        
+        const myUid = auth.currentUser.uid;
+        currentChatId = myUid < targetUid ? `${myUid}_${targetUid}` : `${targetUid}_${myUid}`;
+        
+        db.collection("users").doc(myUid).collection("inbox").doc(targetUid).update({unread: false}).catch(e=>{});
+        loadMessages();
+    }
+
+    function closeChat() {
+        playSafeSound('click');
+        document.getElementById('chatModal').classList.add('hidden');
+        if(chatUnsubscribe) { chatUnsubscribe(); chatUnsubscribe = null; }
+        currentChatUserId = null;
+        currentChatId = null;
+    }
+
+    function sendMessage() {
+        const input = document.getElementById('chatInput');
+        const text = input.value.trim();
+        if(text === "" || !currentChatId || !auth.currentUser) return;
+        
+        playSafeSound('click');
+        const myUid = auth.currentUser.uid;
+        const myName = auth.currentUser.displayName || auth.currentUser.email.split('@')[0];
+        const targetName = document.getElementById('chatWithTitle').innerText;
+        
+        db.collection("chats").doc(currentChatId).collection("messages").add({
+            text: text,
+            senderId: myUid,
+            timestamp: firebase.firestore.FieldValue.serverTimestamp()
+        }).then(() => {
+            input.value = "";
+            
+            db.collection("users").doc(myUid).collection("inbox").doc(currentChatUserId).set({
+                lastMessage: text, timestamp: firebase.firestore.FieldValue.serverTimestamp(), unread: false, targetName: targetName
+            }, { merge: true });
+            
+            db.collection("users").doc(currentChatUserId).collection("inbox").doc(myUid).set({
+                lastMessage: text, timestamp: firebase.firestore.FieldValue.serverTimestamp(), unread: true, targetName: myName
+            }, { merge: true });
+        });
+    }
+
+    function loadMessages() {
+        if(chatUnsubscribe) { chatUnsubscribe(); }
+        const messagesDiv = document.getElementById('chatMessages');
+        messagesDiv.innerHTML = '<div style="text-align:center; color:var(--text-sub); margin-top:20px;"><i class="fas fa-spinner fa-spin"></i> Yükleniyor...</div>';
+        
+        chatUnsubscribe = db.collection("chats").doc(currentChatId).collection("messages")
+            .orderBy("timestamp", "asc")
+            .onSnapshot(snapshot => {
+                messagesDiv.innerHTML = '';
+                if(snapshot.empty) {
+                    messagesDiv.innerHTML = '<div style="text-align:center; color:var(--text-sub); margin-top:20px;">Henüz mesaj yok. İlk mesajı sen gönder!</div>';
+                }
+                
+                snapshot.forEach(doc => {
+                    const data = doc.data();
+                    const isMe = data.senderId === auth.currentUser.uid;
+                    const timeString = data.timestamp ? new Date(data.timestamp.toDate()).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : "Şimdi";
+                    
+                    messagesDiv.innerHTML += `
+                        <div class="chat-bubble ${isMe ? 'chat-sent' : 'chat-received'}" style="${isMe ? 'background: var(--boost-blue);' : ''}">
+                            ${data.text}
+                            <span class="chat-time">${timeString}</span>
+                        </div>
+                    `;
+                });
+                setTimeout(() => { messagesDiv.scrollTop = messagesDiv.scrollHeight; }, 100);
+            });
+    }
+
+    // --- LİDERLİK TABLOSU ---
+    function openLeaderboard() {
+        playSafeSound('click'); document.getElementById('leaderboardModal').classList.remove('hidden');
+        const listDiv = document.getElementById('leaderboardList');
+        listDiv.innerHTML = '<div style="text-align:center; color:var(--text-sub); padding: 30px;"><i class="fas fa-spinner fa-spin fa-2x"></i><br><br>Veriler Çekiliyor...</div>';
+        
+        db.collection("users").orderBy("totalPoints", "desc").limit(10).get().then((querySnapshot) => {
+            listDiv.innerHTML = ''; let validUsersCount = 0;
+            if(querySnapshot.empty) { listDiv.innerHTML = '<div style="text-align:center; color:var(--text-sub); padding:20px;">Henüz kimse puan kazanmamış. İlk sen ol!</div>'; return; }
+            
+            querySnapshot.forEach((doc) => {
+                const data = doc.data(); if (!data.totalPoints || data.totalPoints <= 0) return; validUsersCount++;
+                let medal = '';
+                if(validUsersCount === 1) medal = '🥇'; else if(validUsersCount === 2) medal = '🥈'; else if(validUsersCount === 3) medal = '🥉'; else medal = `<span style="display:inline-block; width:20px; text-align:center; color:var(--text-sub); font-weight:bold;">${validUsersCount}</span>`;
+                
+                let nameDisplay = data.username || "Gizemli Oyuncu";
+                if(adminEmails.includes((data.email || "").toLowerCase())) nameDisplay = `<i class="fas fa-user-secret admin-shield"></i><span class="admin-glow">${nameDisplay}</span>`;
+                
+                let pPic = data.profilePic || `https://api.dicebear.com/7.x/bottts/svg?seed=${data.username}`;
+                let rData = getRankData(data.totalPoints);
+
+                listDiv.innerHTML += `
+                    <div class="leaderboard-item" onclick="openProfile('${doc.id}')">
+                        <div style="display: flex; align-items: center; gap: 12px; font-weight: 700; font-size: 16px;">
+                            <span class="rank-medal">${medal}</span>
+                            <img src="${pPic}" style="width:30px; height:30px; border-radius:50%; object-fit:cover; border:2px solid var(--border);">
+                            <div style="display:flex; flex-direction:column; align-items:flex-start;">
+                                <span>${nameDisplay}</span>
+                                <span style="font-size:10px; color:${rData.color.includes('fbbf24') ? '#d97706' : 'var(--text-sub)'}; font-weight:900;">${rData.name}</span>
+                            </div>
+                        </div>
+                        <div style="font-weight: 900; color: var(--points-color); font-size: 18px;">${data.totalPoints} XP</div>
+                    </div>
+                `;
+            });
+            if(validUsersCount === 0) listDiv.innerHTML = '<div style="text-align:center; color:var(--text-sub); padding:20px;">Henüz kimse puan kazanmamış. İlk sen ol!</div>';
+        }).catch(error => { listDiv.innerHTML = '<div style="text-align:center; color:var(--t1-color); padding:20px;">Veriler çekilirken bir hata oluştu!</div>'; });
+    }
+
+    // --- ÇEVRİMİÇİ KULLANICILAR LİSTESİ ---
+    db.collection("users").where("online", "==", true).onSnapshot(snapshot => {
+        document.getElementById('onlineCountText').textContent = snapshot.size + " Aktif";
+        let onlineListHtml = "";
+        if(snapshot.empty) { onlineListHtml = '<div style="text-align:center; color:var(--text-sub);">Şu an kimse aktif değil. İlk sen ol!</div>'; } 
+        else {
+            snapshot.forEach(doc => {
+                const data = doc.data();
+                let uName = data.username || "Oyuncu";
+                if(adminEmails.includes((data.email || "").toLowerCase())) uName = `<i class="fas fa-user-secret admin-shield"></i><span class="admin-glow">${uName}</span>`;
+                let pPic = data.profilePic || `https://api.dicebear.com/7.x/bottts/svg?seed=${data.username}`;
+                
+                onlineListHtml += `
+                    <div class="online-user-item" onclick="openProfile('${doc.id}')">
+                        <div class="pulse-green-dot"></div> 
+                        <img src="${pPic}" style="width:24px; height:24px; border-radius:50%; border:1px solid var(--success);">
+                        <span>${uName}</span>
+                    </div>
+                `;
+            });
+        }
+        document.getElementById('onlineUsersList').innerHTML = onlineListHtml;
+    });
+
+    // --- BOOST (İKSİR) SİSTEMİ ---
+    function updateBoostUI() {
+        const boostContainer = document.getElementById('boostPanelContainer');
+        const boostBtn = document.getElementById('btnUseBoost');
+        const badge = document.getElementById('boostCountBadge');
+
+        if (gameMode === '1p' && auth.currentUser) {
+            boostContainer.style.display = 'flex';
+            if (badge) badge.textContent = localX2BoostCount; 
+            
+            if (isX2ComboActive) { } 
+            else if (localX2BoostCount > 0) boostBtn.classList.remove('disabled'); 
+            else boostBtn.classList.add('disabled');
+        } else { boostContainer.style.display = 'none'; }
+    }
+
+    function activateX2Combo() {
+        if (!auth.currentUser || isX2ComboActive || localX2BoostCount <= 0) return;
+        playSafeSound('golden'); isX2ComboActive = true;
+        
+        db.collection("users").doc(auth.currentUser.uid).update({ 'boosts.x2': firebase.firestore.FieldValue.increment(-1) });
+
+        const boostBtn = document.getElementById('btnUseBoost');
+        const barContainer = document.getElementById('boostProgressBar');
+        const barFill = document.getElementById('boostProgressFill');
+        
+        boostBtn.classList.add('active');
+        boostBtn.innerHTML = `<i class="fas fa-fire"></i> X2 AKTİF! <div id="boostCountBadge" class="boost-badge" style="display:none;">0</div>`;
+        barContainer.style.display = 'block'; barFill.style.width = '100%';
+
+        let duration = 45; let current = duration; barFill.style.transition = 'width 1s linear';
+
+        boostTimerInterval = setInterval(() => {
+            current--; barFill.style.width = `${(current / duration) * 100}%`;
+            if (current <= 0) {
+                clearInterval(boostTimerInterval); isX2ComboActive = false; boostBtn.classList.remove('active');
+                boostBtn.innerHTML = `<i class="fas fa-bolt"></i> x2 Etkinleştir <div id="boostCountBadge" class="boost-badge">${localX2BoostCount}</div>`;
+                barContainer.style.display = 'none'; updateBoostUI();
+                showDynamicIsland(false, false, false, "info", "Mavi X2 İksirinin süresi bitti!");
+            }
+        }, 1000);
+    }
+
+    function updateHatDisplay() {
+        const hatImg = document.getElementById('wordHatImg');
+        if (localEquippedHat) { const item = marketItems.find(i => i.id === localEquippedHat); if (item && item.type === "hat") { hatImg.src = item.img; hatImg.style.display = 'block'; return; } }
+        hatImg.style.display = 'none';
+    }
+
+    // --- MARKET SİSTEMİ ---
+    function openMarket() { playSafeSound('click'); document.getElementById('marketCurrentXP').textContent = localTotalPoints; renderMarket(); document.getElementById('marketModal').classList.remove('hidden'); }
+    function closeMarket() { playSafeSound('click'); document.getElementById('marketModal').classList.add('hidden'); }
+
+    function renderMarket() {
+        const listDiv = document.getElementById('marketList'); listDiv.innerHTML = '';
+        marketItems.forEach(item => {
+            const isOwned = localInventory.includes(item.id); const isEquipped = localEquippedHat === item.id; const canAfford = localTotalPoints >= item.price;
+            let btnHtml = ""; let extraStyle = item.type === "consumable" ? "consumable" : "";
+
+            if (item.type === "consumable") {
+                if (localX2BoostCount >= 3) btnHtml = `<button class="btn-buy too-expensive" disabled><i class="fas fa-ban"></i> Max (3) Adet Dolu</button>`;
+                else if (canAfford) btnHtml = `<button class="btn-buy buyable-blue" onclick="buyConsumable('${item.id}', ${item.price})"><i class="fas fa-flask"></i> İksir Al (${item.price} XP)</button>`;
+                else btnHtml = `<button class="btn-buy too-expensive" disabled><i class="fas fa-lock"></i> Yetersiz XP (${item.price} XP)</button>`;
+            } else {
+                if (isEquipped) btnHtml = `<button class="btn-buy equipped" disabled><i class="fas fa-check"></i> Kuşanıldı</button>`;
+                else if (isOwned) btnHtml = `<button class="btn-buy equip" onclick="equipItem('${item.id}')"><i class="fas fa-tshirt"></i> Kuşan</button>`;
+                else {
+                    if (canAfford) btnHtml = `<button class="btn-buy buyable" onclick="buyItem('${item.id}', ${item.price})"><i class="fas fa-shopping-cart"></i> Satın Al (${item.price} XP)</button>`;
+                    else btnHtml = `<button class="btn-buy too-expensive" disabled><i class="fas fa-lock"></i> Yetersiz XP (${item.price} XP)</button>`;
+                }
+            }
+
+            listDiv.innerHTML += `<div class="market-item ${extraStyle}"><img src="${item.img}" alt="${item.name}"><div class="market-item-name">${item.name}</div>${item.desc ? `<div style="font-size:12px; color:var(--text-sub); margin-bottom:5px;">${item.desc}</div>` : ''}${(!isOwned && item.type !== 'consumable') || item.type === 'consumable' ? `<div class="market-item-price"><i class="fas fa-star"></i> ${item.price} XP</div>` : `<div class="market-item-price" style="color:var(--success);">Sahipsin</div>`}${btnHtml}</div>`;
+        });
+    }
+
+    function buyItem(itemId, price) {
+        if (!auth.currentUser || localTotalPoints < price) return;
+        if (confirm(`Bu eşyayı ${price} XP karşılığında almak istediğine emin misin?`)) {
+            playSafeSound('golden');
+            db.collection("users").doc(auth.currentUser.uid).set({ totalPoints: firebase.firestore.FieldValue.increment(-price), inventory: firebase.firestore.FieldValue.arrayUnion(itemId) }, { merge: true }).then(() => { showDynamicIsland(false, false, false, "success", "Eşya Satın Alındı! Güle güle kullan."); });
+        }
+    }
+
+    function buyConsumable(itemId, price) {
+        if (!auth.currentUser || localTotalPoints < price) return;
+        if (confirm(`Mavi X2 İksirini ${price} XP karşılığında almak istediğine emin misin?`)) {
+            playSafeSound('golden');
+            db.collection("users").doc(auth.currentUser.uid).update({ totalPoints: firebase.firestore.FieldValue.increment(-price), 'boosts.x2': firebase.firestore.FieldValue.increment(1) }).then(() => { showDynamicIsland(false, false, false, "success", "X2 Combo İksiri Satın Alındı!"); });
+        }
+    }
+
+    function equipItem(itemId) { if (!auth.currentUser) return; playSafeSound('click'); db.collection("users").doc(auth.currentUser.uid).set({ equippedHat: itemId }, { merge: true }).then(() => { showDynamicIsland(false, false, false, "info", "Eşya Kuşanıldı!"); }); }
+
+    // --- ADMİN PANELİ ---
+    function openAdminPanel() {
+        playSafeSound('click'); document.getElementById('adminModal').classList.remove('hidden');
+        const listDiv = document.getElementById('adminUserList'); listDiv.innerHTML = '<div style="text-align:center; padding: 20px;"><i class="fas fa-spinner fa-spin fa-2x"></i><br><br>Oyuncular Taranıyor...</div>';
+        db.collection("users").orderBy("totalPoints", "desc").get().then(snap => {
+            let usersHtml = ""; let selectOptions = marketItems.filter(i => i.type === "hat").map(i => `<option value="${i.id}">${i.name}</option>`).join("");
+            if(snap.empty) { listDiv.innerHTML = '<div style="text-align:center; padding:20px; color:var(--text-sub);">Sistemde kayıtlı oyuncu yok.</div>'; return; }
+            snap.forEach(doc => {
+                const data = doc.data(); const uId = doc.id; let isAdm = adminEmails.includes((data.email || "").toLowerCase());
+                usersHtml += `<div class="leaderboard-item" style="flex-wrap: wrap; border-color: ${isAdm ? 'var(--admin-red)' : 'var(--border)'}; gap: 10px;"><div style="flex: 1; min-width: 150px;"><div style="font-weight: 800;">${isAdm ? '<i class="fas fa-user-secret" style="color:var(--admin-red)"></i> ' : ''}${data.username}</div><div style="font-size: 12px; color: var(--text-sub);">${data.email}</div><div style="font-weight: 900; color: var(--points-color); font-size: 16px; margin-top:5px;">${data.totalPoints || 0} XP</div></div><div style="display: flex; gap: 8px; flex-wrap: wrap;"><button class="btn-buy" style="width: auto; background: var(--success); color: white; padding: 8px 12px;" onclick="adminGiveXP('${uId}', '${data.username}')"><i class="fas fa-plus"></i> XP Ver</button><div style="display: flex; align-items: center; border: 1px solid var(--border); border-radius: 10px; overflow: hidden;"><select id="item_select_${uId}" style="padding: 8px; border: none; background: var(--bg-body); color: var(--text-main); font-weight: 600; outline: none;">${selectOptions}</select><button class="btn-buy" style="width: auto; background: #a855f7; color: white; border-radius: 0; padding: 8px 12px;" onclick="adminGiveItem('${uId}', '${data.username}')"><i class="fas fa-gift"></i></button></div>${!isAdm ? `<button class="btn-ban" onclick="banUser('${uId}', '${data.username}')"><i class="fas fa-ban"></i></button>` : ''}</div></div>`;
+            });
+            listDiv.innerHTML = usersHtml;
+        });
+    }
+
+    function adminGiveXP(userId, username) { let amount = prompt(`"${username}" adlı oyuncuya ne kadar XP vermek istiyorsun? (Eksi değer yazarak silebilirsin)`); amount = parseInt(amount); if (isNaN(amount)) return; db.collection("users").doc(userId).set({ totalPoints: firebase.firestore.FieldValue.increment(amount) }, { merge: true }).then(() => { alert(`Başarılı! ${username} oyuncusuna ${amount} XP eklendi.`); openAdminPanel(); }); }
+    function adminGiveItem(userId, username) { let selectEl = document.getElementById(`item_select_${userId}`); let itemId = selectEl.value; let itemName = selectEl.options[selectEl.selectedIndex].text; if (confirm(`"${username}" adlı oyuncuya "${itemName}" hediye etmek istediğine emin misin?`)) { db.collection("users").doc(userId).set({ inventory: firebase.firestore.FieldValue.arrayUnion(itemId) }, { merge: true }).then(() => { alert(`Hediye Başarıyla Gönderildi!`); }); } }
+    function closeAdminPanel() { playSafeSound('click'); document.getElementById('adminModal').classList.add('hidden'); }
+    function openOnlineModal() { playSafeSound('click'); document.getElementById('onlineUsersModal').classList.remove('hidden'); }
+    function closeOnlineModal() { playSafeSound('click'); document.getElementById('onlineUsersModal').classList.add('hidden'); }
+    
+    function closeUpdatesAndShowWelcome() { 
+        playSafeSound('click'); 
+        document.getElementById('screenUpdates').classList.add('hidden-updates'); 
+        document.getElementById('screenWelcome').classList.remove('hidden-welcome'); 
+        window.scrollTo(0, 0); 
+        
+        if(!localStorage.getItem('neoTourDone')) {
+            setTimeout(showNeoWelcome, 600);
+        }
+    }
+
+    function startGameFromWelcome() { 
+        playSafeSound('click'); 
+        if(!document.getElementById('welcomePrivacyCheck').checked) { 
+            showDynamicIsland(false, false, false, "error", "Lütfen önce Gizlilik Politikasını onaylayın!"); 
+            return; 
+        } 
+        if(!auth.currentUser) {
+            showDynamicIsland(false, false, false, "error", "Oyuna başlamak için giriş yapmalısın!");
+            openAuthModal();
+            return;
+        }
+        document.getElementById('screenWelcome').classList.add('hidden-welcome'); 
+    }
+    
+    function banUser(docId, username) { if(confirm(`"${username}" adlı kullanıcıyı veritabanından KALICI olarak silmek/banlamak istediğine emin misin?`)) { db.collection("users").doc(docId).delete().then(() => { showDynamicIsland(false, false, false, "success", `${username} başarıyla BANLANDI!`); openAdminPanel(); }); } }
+    function closeLeaderboard() { playSafeSound('click'); document.getElementById('leaderboardModal').classList.add('hidden'); }
+    
+    function openAboutModal() { playSafeSound('click'); document.getElementById('aboutModal').classList.remove('hidden'); }
+    function closeAboutModal() { playSafeSound('click'); document.getElementById('aboutModal').classList.add('hidden'); }
+
+    function openAuthModal() { 
+        playSafeSound('click'); 
+        toggleAuthMode(false); 
+        document.getElementById('authModal').classList.remove('hidden'); 
+    }
+    
+    function closeAuthModal() { playSafeSound('click'); document.getElementById('authModal').classList.add('hidden'); }
+    
+    function toggleAuthMode(isRegister) { 
+        document.getElementById('forgotPasswordBlock').style.display = 'none';
+        document.getElementById('loginFormBlock').style.display = isRegister ? 'none' : 'block'; 
+        document.getElementById('registerFormBlock').style.display = isRegister ? 'block' : 'none'; 
+    }
+
+    function toggleForgotPassword(show) {
+        if(show) {
+            document.getElementById('loginFormBlock').style.display = 'none';
+            document.getElementById('registerFormBlock').style.display = 'none';
+            document.getElementById('forgotPasswordBlock').style.display = 'block';
+        } else {
+            document.getElementById('forgotPasswordBlock').style.display = 'none';
+            document.getElementById('loginFormBlock').style.display = 'block';
+        }
+    }
+
+    function openPrivacyModal() { playSafeSound('click'); document.getElementById('privacyModal').classList.remove('hidden'); }
+    function closePrivacyModal() { playSafeSound('click'); document.getElementById('privacyModal').classList.add('hidden'); }
+
+    // --- LOGİN / KAYIT / ŞİFRE SIFIRLAMA ---
+    function handleLogin() {
+        const email = document.getElementById('loginEmail').value; const pass = document.getElementById('loginPass').value;
+        if(!email || !pass) { showDynamicIsland(false, false, false, "error", "E-posta veya şifre boş!"); return; }
+        auth.signInWithEmailAndPassword(email, pass).then(() => { closeAuthModal(); showDynamicIsland(false, false, false, "success", "Giriş Başarılı! Hoş Geldin."); }).catch(error => { showDynamicIsland(false, false, false, "error", "Hata: Bilgileri kontrol et!"); });
+    }
+
+    function handleRegister() {
+        const username = document.getElementById('regUsername').value; const email = document.getElementById('regEmail').value; const pass = document.getElementById('regPass').value;
+        if(!email || !pass || !username) { showDynamicIsland(false, false, false, "error", "Lütfen tüm alanları doldur!"); return; }
+        auth.createUserWithEmailAndPassword(email, pass).then(userCredential => { 
+            return userCredential.user.updateProfile({ displayName: username }).then(() => {
+                return db.collection("users").doc(userCredential.user.uid).set({ username: username, email: email, totalPoints: 0, inventory: [], equippedHat: null, boosts: { x2: 0 }, lastPointUpdate: firebase.firestore.FieldValue.serverTimestamp(), online: true, createdAt: firebase.firestore.FieldValue.serverTimestamp() }, { merge: true });
+            });
+        }).then(() => { closeAuthModal(); showDynamicIsland(false, false, false, "success", "Hesabın Oluşturuldu!"); }).catch(error => { 
+            if(error.code === 'auth/email-already-in-use') { showDynamicIsland(false, false, false, "error", "Bu e-posta zaten kullanımda!"); } else { showDynamicIsland(false, false, false, "error", "Hata: Şifre en az 6 haneli olmalı."); }
+        });
+    }
+
+    function handleForgotPassword() {
+        const email = document.getElementById('resetEmail').value.trim();
+        if(!email) {
+            showDynamicIsland(false, false, false, "error", "Lütfen e-posta adresini gir!");
+            return;
+        }
+        
+        auth.sendPasswordResetEmail(email).then(() => {
+            showDynamicIsland(false, false, false, "success", "Şifre sıfırlama linki e-postana gönderildi!");
+            toggleForgotPassword(false);
+        }).catch(error => {
+            let msg = "Bir hata oluştu!";
+            if(error.code === 'auth/user-not-found') msg = "Bu e-posta ile kayıtlı hesap bulunamadı!";
+            else if(error.code === 'auth/invalid-email') msg = "Geçersiz e-posta adresi!";
+            showDynamicIsland(false, false, false, "error", msg);
+        });
+    }
+
+    // --- SES VE TEMA ---
+    let audioCtx = null; try { const AudioContext = window.AudioContext || window.webkitAudioContext; if (AudioContext) audioCtx = new AudioContext(); } catch(e) {}
     let isSoundOn = true;
 
     function playSafeSound(type) {
@@ -346,7 +1395,6 @@
             try {
                 if (audioCtx.state === 'suspended') { let p = audioCtx.resume(); if(p !== undefined) p.catch(e=>{}); }
                 let freq = 400, wave = 'sine', duration = 0.1, vol = 0.1;
-                
                 if(type === 'click') { freq = 400; wave = 'sine'; duration = 0.1; vol = 0.1; }
                 else if(type === 'correct') { freq = 523.25; wave = 'sine'; duration = 0.2; vol = 0.2; setTimeout(()=> playSafeSound('correct_2'), 100); }
                 else if(type === 'correct_2') { freq = 659.25; wave = 'sine'; duration = 0.3; vol = 0.2; }
@@ -358,418 +1406,268 @@
                 else if(type === 'combo') { freq = 400; wave = 'square'; duration = 0.1; vol = 0.1; setTimeout(()=> playSafeSound('combo_2'), 100); }
                 else if(type === 'combo_2') { freq = 500; wave = 'square'; duration = 0.1; vol = 0.1; setTimeout(()=> playSafeSound('combo_3'), 100); }
                 else if(type === 'combo_3') { freq = 800; wave = 'square'; duration = 0.3; vol = 0.1; }
-
-                const osc = audioCtx.createOscillator();
-                const gain = audioCtx.createGain();
-                osc.type = wave;
-                osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
-                gain.gain.setValueAtTime(vol, audioCtx.currentTime);
-                gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
-                osc.connect(gain);
-                gain.connect(audioCtx.destination);
-                osc.start();
-                osc.stop(audioCtx.currentTime + duration);
+                const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain(); osc.type = wave; osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+                gain.gain.setValueAtTime(vol, audioCtx.currentTime); gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+                osc.connect(gain); gain.connect(audioCtx.destination); osc.start(); osc.stop(audioCtx.currentTime + duration);
             } catch (err) {}
         }, 0);
     }
 
     function toggleSound() { isSoundOn = !isSoundOn; document.querySelector('#btnSound i').className = isSoundOn ? "fas fa-volume-up" : "fas fa-volume-mute"; }
-    function toggleFullScreen() {
-        if (!document.fullscreenElement) { document.documentElement.requestFullscreen().catch(err => {}); document.querySelector('#btnFullscreen i').className = "fas fa-compress"; } 
-        else { if (document.exitFullscreen) { document.exitFullscreen(); document.querySelector('#btnFullscreen i').className = "fas fa-expand"; } }
-    }
+    function toggleFullScreen() { if (!document.fullscreenElement) { document.documentElement.requestFullscreen().catch(err => {}); document.querySelector('#btnFullscreen i').className = "fas fa-compress"; } else { if (document.exitFullscreen) { document.exitFullscreen(); document.querySelector('#btnFullscreen i').className = "fas fa-expand"; } } }
+    function applyTheme(isDark) { const btn = document.getElementById('btnTheme'); if (isDark) { document.body.classList.add('dark-mode'); if(btn) btn.innerHTML = '<i class="fas fa-sun"></i> <span class="hide-mobile">Light</span>'; } else { document.body.classList.remove('dark-mode'); if(btn) btn.innerHTML = '<i class="fas fa-moon"></i> <span class="hide-mobile">Dark</span>'; } }
+    function toggleTheme() { const isCurrentlyDark = document.body.classList.contains('dark-mode'); applyTheme(!isCurrentlyDark); localStorage.setItem('meGamesTheme', !isCurrentlyDark ? 'dark' : 'light'); }
 
-    // YENİ: EKRAN YÜKLENDİĞİNDE YAPILACAKLAR (SPLASH -> HOŞGELDİN EKRANI)
     window.addEventListener('load', () => {
-        setTimeout(() => { 
-            document.getElementById('splash-screen').classList.add('hidden-splash'); 
-            // 2 saniye sonra splash kaybolacak, arkasında duran "screenWelcome" jilet gibi ortaya çıkacak.
-        }, 2000);
-        document.body.addEventListener('click', (e) => { if(e.target.tagName === 'BUTTON' || e.target.closest('.control-btn')) playSafeSound('click'); });
-        updateBackButton();
+        const savedTheme = localStorage.getItem('meGamesTheme'); if(savedTheme === 'dark') applyTheme(true); else applyTheme(false);
+        setTimeout(() => { document.getElementById('splash-screen').classList.add('hidden-splash'); document.getElementById('screenUpdates').classList.remove('hidden-updates'); }, 2000);
+        document.body.addEventListener('click', (e) => { if(e.target.tagName === 'BUTTON' || e.target.closest('.control-btn')) playSafeSound('click'); }); updateBackButton();
     });
 
-    // YENİ: HOŞGELDİN EKRANI BUTON İŞLEVLERİ
-    function startGameFromWelcome() {
-        playSafeSound('click');
-        document.getElementById('screenWelcome').classList.add('hidden-welcome');
-        // Zaten arkada ana menü (Cihaz Seçimi) bekliyor, geçiş çok yumuşak olacak.
-    }
+    function openTubitakModal() { playSafeSound('click'); document.getElementById('tubitakModal').classList.remove('hidden'); }
+    function closeTubitakModal() { playSafeSound('click'); document.getElementById('tubitakModal').classList.add('hidden'); }
 
-    function openTubitakModal() {
-        playSafeSound('click');
-        document.getElementById('tubitakModal').classList.remove('hidden');
-    }
-
-    function closeTubitakModal() {
-        playSafeSound('click');
-        document.getElementById('tubitakModal').classList.add('hidden');
-    }
-
-    // --- KELİME HAVUZLARI ---
-    const grade8Units = [
-        { id: 1, name: "Friendship", icon: "fa-handshake", words: [{e:"Back up", t:"Desteklemek"}, {e:"Count on", t:"Güvenmek"}, {e:"Get on well", t:"İyi geçinmek"}, {e:"Laid-back", t:"Rahat/Gamsız"}, {e:"Stubborn", t:"İnatçı"}, {e:"Buddy", t:"Kanka"}, {e:"Apologize", t:"Özür dilemek"}, {e:"Argue", t:"Tartışmak"}, {e:"Attach importance", t:"Önem vermek"}, {e:"Loyal", t:"Sadık"}] },
-        { id: 2, name: "Teen Life", icon: "fa-headphones", words: [{e:"Unbearable", t:"Dayanılmaz"}, {e:"Terrific", t:"Müthiş"}, {e:"Casual", t:"Günlük (Giyim)"}, {e:"Trendy", t:"Modaya uygun"}, {e:"Campfire", t:"Kamp ateşi"}, {e:"Equipment", t:"Ekipman"}, {e:"Harmonious", t:"Uyumlu"}, {e:"Impressive", t:"Etkileyici"}, {e:"Snob", t:"Burnu havada"}, {e:"Trekking", t:"Doğa yürüyüşü"}] },
-        { id: 3, name: "In The Kitchen", icon: "fa-utensils", words: [{e:"Bake", t:"Fırında pişirmek"}, {e:"Chop", t:"Doğramak"}, {e:"Ingredient", t:"Malzeme"}, {e:"Recipe", t:"Tarif"}, {e:"Whisk", t:"Çırpmak"}, {e:"Boil", t:"Kaynatmak"}, {e:"Fry", t:"Kızartmak"}, {e:"Grill", t:"Izgara yapmak"}, {e:"Steam", t:"Buharda pişirmek"}, {e:"Knead", t:"Yoğurmak"}] },
-        { id: 4, name: "On The Phone", icon: "fa-phone", words: [{e:"Hang up", t:"Kapatmak"}, {e:"Pick up", t:"Açmak"}, {e:"Engaged", t:"Meşgul"}, {e:"Dial", t:"Tuşlamak"}, {e:"Extension", t:"Dahili hat"}, {e:"Put through", t:"Telefona bağlamak"}, {e:"Available", t:"Müsait"}, {e:"Bad line", t:"Kötü hat"}, {e:"Hold on", t:"Beklemek"}, {e:"Memo", t:"Kısa not"}] },
-        { id: 5, name: "The Internet", icon: "fa-wifi", words: [{e:"Connection", t:"Bağlantı"}, {e:"Notification", t:"Bildirim"}, {e:"Attachment", t:"Dosya eki"}, {e:"Confirm", t:"Onaylamak"}, {e:"Account", t:"Hesap"}, {e:"Access", t:"Erişim"}, {e:"Browser", t:"Tarayıcı"}, {e:"Download", t:"İndirmek"}, {e:"Search engine", t:"Arama motoru"}, {e:"Upload", t:"Yüklemek"}] },
-        { id: 6, name: "Adventures", icon: "fa-mountain", words: [{e:"Fascinating", t:"Büyüleyici"}, {e:"Helmet", t:"Kask"}, {e:"Ambitious", t:"Hırslı"}, {e:"Challenging", t:"Zorlayıcı"}, {e:"Entertaining", t:"Eğlenceli"}, {e:"Cave diving", t:"Mağara dalışı"}, {e:"Courage", t:"Cesaret"}, {e:"Extreme sports", t:"Ekstrem sporlar"}, {e:"Skydiving", t:"Gökyüzü dalışı"}, {e:"Hang-gliding", t:"Yelken kanat"}] },
-        { id: 7, name: "Tourism", icon: "fa-plane", words: [{e:"Architecture", t:"Mimari"}, {e:"All-inclusive", t:"Her şey dahil"}, {e:"Ancient", t:"Antik"}, {e:"Destination", t:"Varış yeri"}, {e:"Accommodation", t:"Konaklama"}, {e:"Attraction", t:"Çekim merkezi"}, {e:"Bed and breakfast", t:"Yatak ve kahvaltı"}, {e:"Monument", t:"Anıt"}, {e:"Sightseeing", t:"Gezi"}, {e:"Souvenir", t:"Hediyelik eşya"}] },
-        { id: 8, name: "Chores", icon: "fa-broom", words: [{e:"Do the laundry", t:"Çamaşır yıkamak"}, {e:"Mopping", t:"Paspas yapmak"}, {e:"Ironing", t:"Ütü yapmak"}, {e:"Responsibility", t:"Sorumluluk"}, {e:"Take out trash", t:"Çöpü çıkarmak"}, {e:"Dust the shelves", t:"Rafların tozunu almak"}, {e:"Empty the dishwasher", t:"Makineyi boşaltmak"}, {e:"Set the table", t:"Masayı kurmak"}, {e:"Sweep the floor", t:"Yeri süpürmek"}, {e:"Vacuum the floor", t:"Elektrikli süpürge yapmak"}] },
-        { id: 9, name: "Science", icon: "fa-flask", words: [{e:"Test tube", t:"Deney tüpü"}, {e:"Vaccination", t:"Aşılama"}, {e:"Explosion", t:"Patlama"}, {e:"High-tech", t:"Yüksek teknoloji"}, {e:"Process", t:"Süreç"}, {e:"Cell", t:"Hücre"}, {e:"Discover", t:"Keşfetmek"}, {e:"Experiment", t:"Deney yapmak"}, {e:"Genius", t:"Dahi"}, {e:"Gravity", t:"Yerçekimi"}] },
-        { id: 10, name: "Natural Forces", icon: "fa-bolt", words: [{e:"Avalanche", t:"Çığ"}, {e:"Hurricane", t:"Kasırga"}, {e:"Shortage", t:"Kıtlık"}, {e:"Global warming", t:"Küresel ısınma"}, {e:"Take precaution", t:"Önlem almak"}, {e:"Deforestation", t:"Ormansızlaşma"}, {e:"Drought", t:"Kuraklık"}, {e:"Earthquake", t:"Deprem"}, {e:"Eco-friendly", t:"Çevre dostu"}, {e:"Landslide", t:"Toprak kayması"}] }
-    ];
-    const grade5Units = [{ id: 1, name: "Hello!", icon: "fa-hand-paper", words: grade8Units[0].words }];
-    const grade6Units = [{ id: 1, name: "Life", icon: "fa-sun", words: grade8Units[1].words }];
-    const grade7Units = [{ id: 1, name: "Appearance", icon: "fa-user", words: grade8Units[2].words }];
-
-    // --- SİSTEM DEĞİŞKENLERİ ---
-    let currentActiveUnits = grade8Units; 
-    let gameMode = '2p'; 
-    let deviceType = 'pc';
-    let hasSelectedDevice = false;
-
-    let selectedUnit = null, scores = [0, 0], wordPool = [], currentWord = null;
-    let isRoundActive = false, isGoldenQuestion = false;
-    let t1Size = 15, t2Size = 15, t1Pool = [], t2Pool = [];
-    let currentP1 = 0, currentP2 = 0;
+    // --- OYUN MEKANİKLERİ VE YÖNLENDİRMELER ---
+    function updateBackButton() { const btnBack = document.getElementById('btnBack'); if (!document.getElementById('screenDevice').classList.contains('hidden')) btnBack.style.display = 'none'; else btnBack.style.display = 'flex'; }
+    function hideAllScreens() { document.querySelectorAll('.card, #screenSelector, #screenGame').forEach(el => el.classList.add('hidden')); document.getElementById('dynamicIsland').classList.add('hidden-island'); }
+    function stopAllTimers() { clearInterval(rollInterval); clearTimeout(aiTimer); clearTimeout(roundTimeout); clearTimeout(islandTimeout); isRoundActive = false; }
     
-    let comboCount = [0, 0];
-    
-    let aiTimer = null; 
-    let rollInterval = null; 
-    let roundTimeout = null; 
-    let islandTimeout = null;
-
-    function updateBackButton() {
-        const btnBack = document.getElementById('btnBack');
-        // Welcome ekranındaysak zaten üst bar yok, orayı geçtikten sonra cihaz seçimindeysek gizle
-        if (!document.getElementById('screenDevice').classList.contains('hidden')) btnBack.style.display = 'none';
-        else btnBack.style.display = 'flex';
-    }
-
-    function hideAllScreens() {
-        document.querySelectorAll('.card, #screenSelector, #screenGame').forEach(el => el.classList.add('hidden'));
-        document.getElementById('dynamicIsland').classList.add('hidden-island');
-    }
-
-    function stopAllTimers() {
-        clearInterval(rollInterval); clearTimeout(aiTimer); clearTimeout(roundTimeout); clearTimeout(islandTimeout);
-        isRoundActive = false;
-    }
-
     function goBack() {
         playSafeSound('click'); stopAllTimers();
-
-        if (!document.getElementById('screenGame').classList.contains('hidden')) {
-            hideAllScreens(); document.getElementById('screenUnits').classList.remove('hidden'); 
-            scores = [0, 0]; comboCount = [0, 0]; updateScores();
-        } 
-        else if (!document.getElementById('screenSelector').classList.contains('hidden')) {
-            hideAllScreens(); document.getElementById('screenUnits').classList.remove('hidden'); 
-            scores = [0, 0]; comboCount = [0, 0]; updateScores();
-        } 
-        else if (!document.getElementById('screenUnits').classList.contains('hidden')) {
-            hideAllScreens(); document.getElementById('screenGrade').classList.remove('hidden');
-        } 
-        else if (!document.getElementById('screenGrade').classList.contains('hidden')) {
-            hideAllScreens(); document.getElementById('screenTeams').classList.remove('hidden');
-        } 
-        else if (!document.getElementById('screenTeams').classList.contains('hidden')) {
-            hideAllScreens();
-            if (deviceType === 'pc') document.getElementById('screenMode').classList.remove('hidden');
-            else { document.getElementById('screenDevice').classList.remove('hidden'); hasSelectedDevice = false; }
-        } 
-        else if (!document.getElementById('screenMode').classList.contains('hidden')) {
-            hideAllScreens(); document.getElementById('screenDevice').classList.remove('hidden'); hasSelectedDevice = false;
-        } 
-        else if (!document.getElementById('screenResult').classList.contains('hidden')) {
-            hideAllScreens(); document.getElementById('screenUnits').classList.remove('hidden'); 
-            scores = [0, 0]; comboCount = [0, 0]; updateScores();
-        }
-        
-        window.scrollTo(0, 0); 
-        updateBackButton();
-    }
-
-    function fullReset() {
-        stopAllTimers(); hideAllScreens(); scores = [0, 0]; comboCount = [0, 0]; updateScores(); 
-        hasSelectedDevice = false; document.getElementById('screenDevice').classList.remove('hidden'); 
-        // Ana menüye dönerken Welcome ekranı tekrar görünmesin istiyorsan böyle kalabilir. Görünsün dersen aşağıdaki satırı açabilirsin:
-        // document.getElementById('screenWelcome').classList.remove('hidden-welcome');
-        window.scrollTo(0, 0); 
-        updateBackButton();
-    }
-
-    function selectDevice(dev) {
-        deviceType = dev; hasSelectedDevice = true; document.getElementById('screenDevice').classList.add('hidden');
-        if (dev === 'mobile') selectMode('1p'); else document.getElementById('screenMode').classList.remove('hidden');
+        if (!document.getElementById('screenGame').classList.contains('hidden')) { hideAllScreens(); document.getElementById('screenUnits').classList.remove('hidden'); scores = [0, 0]; comboCount = [0, 0]; updateScores(); } 
+        else if (!document.getElementById('screenSelector').classList.contains('hidden')) { hideAllScreens(); document.getElementById('screenUnits').classList.remove('hidden'); scores = [0, 0]; comboCount = [0, 0]; updateScores(); } 
+        else if (!document.getElementById('screenUnits').classList.contains('hidden')) { hideAllScreens(); document.getElementById('screenGrade').classList.remove('hidden'); } 
+        else if (!document.getElementById('screenGrade').classList.contains('hidden')) { hideAllScreens(); document.getElementById('screenTeams').classList.remove('hidden'); } 
+        else if (!document.getElementById('screenTeams').classList.contains('hidden')) { hideAllScreens(); if (deviceType === 'pc') document.getElementById('screenMode').classList.remove('hidden'); else { document.getElementById('screenDevice').classList.remove('hidden'); hasSelectedDevice = false; } } 
+        else if (!document.getElementById('screenMode').classList.contains('hidden')) { hideAllScreens(); document.getElementById('screenDevice').classList.remove('hidden'); hasSelectedDevice = false; } 
+        else if (!document.getElementById('screenResult').classList.contains('hidden')) { hideAllScreens(); document.getElementById('screenUnits').classList.remove('hidden'); scores = [0, 0]; comboCount = [0, 0]; updateScores(); }
         window.scrollTo(0, 0); updateBackButton();
     }
 
+    function fullReset() { stopAllTimers(); hideAllScreens(); scores = [0, 0]; comboCount = [0, 0]; updateScores(); isMixedMode = false; selectedMixedUnits = []; hasSelectedDevice = false; document.getElementById('screenDevice').classList.remove('hidden'); window.scrollTo(0, 0); updateBackButton(); }
+    
+    function selectDevice(dev) { deviceType = dev; hasSelectedDevice = true; document.getElementById('screenDevice').classList.add('hidden'); if (dev === 'mobile') selectMode('1p'); else document.getElementById('screenMode').classList.remove('hidden'); window.scrollTo(0, 0); updateBackButton(); }
+    
     function selectMode(mode) {
         gameMode = mode; document.getElementById('screenMode').classList.add('hidden');
         if (gameMode === '1p') {
-            document.getElementById('txtDesc').textContent = "Bot'a karşı oynamak için ismini gir";
-            document.getElementById('lblT1').textContent = "Senin Adın";
-            document.getElementById('t1Input').value = ""; document.getElementById('t1Input').placeholder = "Oyuncu İsmi Girin";
-            document.getElementById('size1Wrapper').style.display = 'none';
-            document.getElementById('p2Setup').style.display = 'none'; 
-            document.getElementById('badge1').style.display = 'none';
-            document.getElementById('badge2').style.display = 'none';
-            document.getElementById('screenGame').classList.add('mode-1p');
-            document.getElementById('topScore1P').classList.remove('hidden');
+            document.getElementById('txtDesc').textContent = "Bot'a karşı oynamak için ismini gir"; document.getElementById('lblT1').textContent = "Senin Adın";
+            if(auth.currentUser) { document.getElementById('t1Input').value = auth.currentUser.displayName || auth.currentUser.email.split('@')[0]; } else { document.getElementById('t1Input').value = ""; }
+            document.getElementById('t1Input').placeholder = "Oyuncu İsmi Girin"; document.getElementById('size1Wrapper').style.display = 'none'; document.getElementById('p2Setup').style.display = 'none'; document.getElementById('badge1').style.display = 'none'; document.getElementById('badge2').style.display = 'none'; document.getElementById('screenGame').classList.add('mode-1p'); document.getElementById('topScore1P').classList.remove('hidden'); updateBoostUI(); 
         } else {
-            document.getElementById('txtDesc').textContent = "Sınıf mevcutlarını girin";
-            document.getElementById('lblT1').textContent = "1. Takım Adı";
-            document.getElementById('t1Input').value = ""; document.getElementById('t1Input').placeholder = "1. Takım İsmi Girin";
-            document.getElementById('size1Wrapper').style.display = 'block';
-            document.getElementById('p2Setup').style.display = 'block'; 
-            document.getElementById('badge1').style.display = 'inline-block';
-            document.getElementById('badge2').style.display = 'inline-block';
-            document.getElementById('screenGame').classList.remove('mode-1p');
-            document.getElementById('topScore1P').classList.add('hidden');
+            document.getElementById('txtDesc').textContent = "Sınıf mevcutlarını girin"; document.getElementById('lblT1').textContent = "1. Takım Adı"; document.getElementById('t1Input').value = ""; document.getElementById('t1Input').placeholder = "1. Takım İsmi Girin"; document.getElementById('size1Wrapper').style.display = 'block'; document.getElementById('p2Setup').style.display = 'block'; document.getElementById('badge1').style.display = 'inline-block'; document.getElementById('badge2').style.display = 'inline-block'; document.getElementById('screenGame').classList.remove('mode-1p'); document.getElementById('topScore1P').classList.add('hidden'); document.getElementById('boostPanelContainer').style.display = 'none';
         }
-        document.getElementById('screenTeams').classList.remove('hidden');
-        window.scrollTo(0, 0); updateBackButton();
+        document.getElementById('screenTeams').classList.remove('hidden'); window.scrollTo(0, 0); updateBackButton();
     }
 
-    function goToGrade() {
-        if(audioCtx && audioCtx.state === 'suspended') { audioCtx.resume().catch(e=>{}); }
-        if (gameMode === '2p') {
-            t1Size = parseInt(document.getElementById('t1SizeInput').value) || 15;
-            t2Size = parseInt(document.getElementById('t2SizeInput').value) || 15;
-            t1Pool = fillPool(t1Size); t2Pool = fillPool(t2Size);
-        }
-        document.getElementById('screenTeams').classList.add('hidden');
-        document.getElementById('screenGrade').classList.remove('hidden');
-        window.scrollTo(0, 0); updateBackButton();
-    }
+    function goToGrade() { if(audioCtx && audioCtx.state === 'suspended') { audioCtx.resume().catch(e=>{}); } if (gameMode === '2p') { t1Size = parseInt(document.getElementById('t1SizeInput').value) || 15; t2Size = parseInt(document.getElementById('t2SizeInput').value) || 15; t1Pool = fillPool(t1Size); t2Pool = fillPool(t2Size); } document.getElementById('screenTeams').classList.add('hidden'); document.getElementById('screenGrade').classList.remove('hidden'); window.scrollTo(0, 0); updateBackButton(); }
 
     function selectGrade(grade) {
-        if(grade === '5') currentActiveUnits = grade5Units;
-        else if(grade === '6') currentActiveUnits = grade6Units;
-        else if(grade === '7') currentActiveUnits = grade7Units;
-        else currentActiveUnits = grade8Units;
-
-        document.getElementById('screenGrade').classList.add('hidden');
-        document.getElementById('screenUnits').classList.remove('hidden');
-        
+        if(grade === '5') currentActiveUnits = grade5Units; else if(grade === '6') currentActiveUnits = grade6Units; else if(grade === '7') currentActiveUnits = grade7Units; else currentActiveUnits = grade8Units;
+        document.getElementById('screenGrade').classList.add('hidden'); document.getElementById('screenUnits').classList.remove('hidden');
+        isMixedMode = false; selectedMixedUnits = []; document.getElementById('btnMixedMode').innerHTML = '<i class="fas fa-random"></i> Karışık Mod (Çoklu Ünite Seç)'; document.getElementById('btnMixedMode').classList.add('btn-rgb'); document.getElementById('mixedControls').classList.add('hidden'); document.getElementById('btnStartMixed').disabled = true; document.getElementById('mixedCount').textContent = '0';
         const grid = document.getElementById('unitGrid'); grid.innerHTML = '';
-        currentActiveUnits.forEach(u => {
-            const btn = document.createElement('button'); btn.className = 'unit-btn';
-            btn.innerHTML = `<i class="fas ${u.icon}"></i><span>${u.name}</span>`;
-            btn.onclick = () => startCompetition(u); grid.appendChild(btn);
-        });
+        currentActiveUnits.forEach(u => { const btn = document.createElement('button'); btn.className = 'unit-btn'; btn.innerHTML = `<i class="fas ${u.icon}"></i><span>${u.name}</span>`; btn.onclick = () => handleUnitClick(u, btn); grid.appendChild(btn); });
         window.scrollTo(0, 0); updateBackButton();
     }
 
-    function fillPool(size) { return Array.from({length: size}, (_, i) => i + 1); }
-
-    function getNextPlayer(team) {
-        let pool = team === 1 ? t1Pool : t2Pool; let size = team === 1 ? t1Size : t2Size;
-        if (pool.length === 0) { pool = fillPool(size); if (team === 1) t1Pool = pool; else t2Pool = pool; }
-        const randIndex = Math.floor(Math.random() * pool.length);
-        const playerNum = pool[randIndex]; pool.splice(randIndex, 1); return playerNum;
+    function toggleMixedMode() {
+        playSafeSound('click'); isMixedMode = !isMixedMode; const btns = document.querySelectorAll('.unit-btn'); const btnMixedMode = document.getElementById('btnMixedMode');
+        if (isMixedMode) { btnMixedMode.innerHTML = '<i class="fas fa-times"></i> Karışık Modu İptal Et'; btnMixedMode.classList.remove('btn-rgb'); btnMixedMode.style.background = "var(--t1-color)"; document.getElementById('mixedControls').classList.remove('hidden'); } 
+        else { btnMixedMode.innerHTML = '<i class="fas fa-random"></i> Karışık Mod (Çoklu Ünite Seç)'; btnMixedMode.style.background = ""; btnMixedMode.classList.add('btn-rgb'); document.getElementById('mixedControls').classList.add('hidden'); selectedMixedUnits = []; btns.forEach(b => b.classList.remove('selected-unit')); document.getElementById('btnStartMixed').disabled = true; document.getElementById('mixedCount').textContent = '0'; }
     }
 
-    function startCompetition(unit) {
-        selectedUnit = unit; wordPool = [...unit.words].sort(() => Math.random() - 0.5);
-        document.getElementById('screenUnits').classList.add('hidden');
-        comboCount = [0, 0]; 
-        
-        let t1Name = document.getElementById('t1Input').value.trim() || "TAKIM 1";
-        if(gameMode === '1p') t1Name = document.getElementById('t1Input').value.trim() || "OYUNCU";
-        
-        document.getElementById('dispT1Name').textContent = t1Name;
-        document.getElementById('ts1-name-lbl').textContent = t1Name; 
+    function handleUnitClick(unit, btn) {
+        if (!isMixedMode) { startCompetition(unit); } 
+        else { playSafeSound('click'); const index = selectedMixedUnits.findIndex(u => u.id === unit.id); if (index > -1) { selectedMixedUnits.splice(index, 1); btn.classList.remove('selected-unit'); } else { selectedMixedUnits.push(unit); btn.classList.add('selected-unit'); } document.getElementById('mixedCount').textContent = selectedMixedUnits.length; document.getElementById('btnStartMixed').disabled = selectedMixedUnits.length === 0; }
+    }
 
-        if (gameMode === '1p') {
-            document.getElementById('dispT2Name').textContent = "🤖 MeBot";
-            startActualGame();
-        } else {
-            let t2Name = document.getElementById('t2Input').value.trim() || "TAKIM 2";
-            document.getElementById('dispT2Name').textContent = t2Name;
-            document.getElementById('selT1Name').textContent = t1Name;
-            document.getElementById('selT2Name').textContent = t2Name;
-            goToSelector();
-        }
+    function startMixedCompetition() { if (selectedMixedUnits.length === 0) return; playSafeSound('click'); let combinedWords = []; selectedMixedUnits.forEach(u => combinedWords.push(...u.words)); let customMixedUnit = { id: 'mixed', name: "Karışık Mod", icon: "fa-random", words: combinedWords }; startCompetition(customMixedUnit); }
+    function fillPool(size) { return Array.from({length: size}, (_, i) => i + 1); }
+    function getNextPlayer(team) { let pool = team === 1 ? t1Pool : t2Pool; let size = team === 1 ? t1Size : t2Size; if (pool.length === 0) { pool = fillPool(size); if (team === 1) t1Pool = pool; else t2Pool = pool; } const randIndex = Math.floor(Math.random() * pool.length); const playerNum = pool[randIndex]; pool.splice(randIndex, 1); return playerNum; }
+
+    function startCompetition(unit) {
+        selectedUnit = unit; wordPool = [...unit.words].sort(() => Math.random() - 0.5); document.getElementById('screenUnits').classList.add('hidden'); comboCount = [0, 0]; 
+        let t1Name = document.getElementById('t1Input').value.trim() || "TAKIM 1"; if(gameMode === '1p') t1Name = document.getElementById('t1Input').value.trim() || "OYUNCU";
+        document.getElementById('dispT1Name').textContent = t1Name; document.getElementById('ts1-name-lbl').textContent = t1Name; 
+        if (gameMode === '1p') { document.getElementById('dispT2Name').textContent = "🤖 MeBot"; startActualGame(); } 
+        else { let t2Name = document.getElementById('t2Input').value.trim() || "TAKIM 2"; document.getElementById('dispT2Name').textContent = t2Name; document.getElementById('selT1Name').textContent = t1Name; document.getElementById('selT2Name').textContent = t2Name; goToSelector(); }
         window.scrollTo(0, 0); updateBackButton();
     }
 
     function goToSelector() {
-        if (wordPool.length === 0) { endGame(); return; }
-        hideAllScreens(); document.getElementById('screenSelector').classList.remove('hidden');
-        window.scrollTo(0, 0);
-        const btn = document.getElementById('btnReveal');
-        btn.disabled = true; btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Kura Çekiliyor...`; btn.style.background = "#94a3b8";
-        
-        let counter = 0; clearInterval(rollInterval); 
-        rollInterval = setInterval(() => {
-            playSafeSound('roll');
-            document.getElementById('animNum1').textContent = Math.floor(Math.random() * t1Size) + 1;
-            document.getElementById('animNum2').textContent = Math.floor(Math.random() * t2Size) + 1;
-            counter++;
-            if(counter > 20) { clearInterval(rollInterval); finalizeSelection(); }
-        }, 100);
-        updateBackButton();
+        if (wordPool.length === 0) { endGame(); return; } hideAllScreens(); document.getElementById('screenSelector').classList.remove('hidden'); window.scrollTo(0, 0);
+        const btn = document.getElementById('btnReveal'); btn.disabled = true; btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Kura Çekiliyor...`; btn.style.background = "#94a3b8"; let counter = 0; clearInterval(rollInterval); 
+        rollInterval = setInterval(() => { playSafeSound('roll'); document.getElementById('animNum1').textContent = Math.floor(Math.random() * t1Size) + 1; document.getElementById('animNum2').textContent = Math.floor(Math.random() * t2Size) + 1; counter++; if(counter > 20) { clearInterval(rollInterval); finalizeSelection(); } }, 100); updateBackButton();
     }
 
-    function finalizeSelection() {
-        currentP1 = getNextPlayer(1); currentP2 = getNextPlayer(2);
-        document.getElementById('animNum1').textContent = currentP1;
-        document.getElementById('animNum2').textContent = currentP2;
-        const btn = document.getElementById('btnReveal');
-        btn.disabled = false; btn.innerHTML = `<i class="fas fa-play"></i> SORUYU GÖSTER`; btn.style.background = "var(--primary)";
-    }
+    function finalizeSelection() { currentP1 = getNextPlayer(1); currentP2 = getNextPlayer(2); document.getElementById('animNum1').textContent = currentP1; document.getElementById('animNum2').textContent = currentP2; const btn = document.getElementById('btnReveal'); btn.disabled = false; btn.innerHTML = `<i class="fas fa-play"></i> SORUYU GÖSTER`; btn.style.background = "var(--primary)"; }
 
     function startActualGame() {
-        if (wordPool.length === 0) { endGame(); return; }
-        hideAllScreens(); document.getElementById('screenGame').classList.remove('hidden');
-        window.scrollTo(0, 0);
-        
-        if (gameMode === '2p') {
-            document.getElementById('badge1').textContent = `Oyuncu #${currentP1}`;
-            document.getElementById('badge2').textContent = `Oyuncu #${currentP2}`;
-        }
-        
-        isRoundActive = true; currentWord = wordPool.pop();
-        isGoldenQuestion = Math.random() < 0.15;
-        const gameContainer = document.getElementById('screenGame');
-        if(isGoldenQuestion) { gameContainer.classList.add('golden-question'); playSafeSound('golden'); } 
-        else { gameContainer.classList.remove('golden-question'); }
-
+        if (wordPool.length === 0) { endGame(); return; } hideAllScreens(); document.getElementById('screenGame').classList.remove('hidden'); window.scrollTo(0, 0);
+        if (gameMode === '2p') { document.getElementById('badge1').textContent = `Oyuncu #${currentP1}`; document.getElementById('badge2').textContent = `Oyuncu #${currentP2}`; }
+        isRoundActive = true; currentWord = wordPool.pop(); isGoldenQuestion = Math.random() < 0.15;
+        const gameContainer = document.getElementById('screenGame'); if(isGoldenQuestion) { gameContainer.classList.add('golden-question'); playSafeSound('golden'); } else { gameContainer.classList.remove('golden-question'); }
         document.getElementById('wordText').textContent = currentWord.e;
-        
-        let opts = [currentWord.t];
-        let others = selectedUnit.words.filter(w => w.t !== currentWord.t).sort(() => Math.random() - 0.5);
-        others.forEach(o => { if(opts.length < 4) opts.push(o.t); });
-        while(opts.length < 4) { opts.push("..."); }
-        opts.sort(() => Math.random() - 0.5);
-        renderOptions(opts);
-
-        if (gameMode === '1p') {
-            let botThinkTime = Math.random() * 2000 + 1500;
-            aiTimer = setTimeout(() => {
-                if (!isRoundActive) return; 
-                let botWillBeCorrect = Math.random() < 0.75;
-                let selectedVal = botWillBeCorrect ? currentWord.t : opts.find(o => o !== currentWord.t);
-                check(2, null, selectedVal); 
-            }, botThinkTime);
-        }
+        let opts = [currentWord.t]; let others = selectedUnit.words.filter(w => w.t !== currentWord.t).sort(() => Math.random() - 0.5); others.forEach(o => { if(opts.length < 4) opts.push(o.t); }); while(opts.length < 4) { opts.push("..."); } opts.sort(() => Math.random() - 0.5); renderOptions(opts);
+        if (gameMode === '1p') { showDynamicIsland(false, false, false, "info", "🤖 MeBot düşünüyor..."); let botThinkTime = Math.random() * 2000 + 1500; aiTimer = setTimeout(() => { if (!isRoundActive) return; let botWillBeCorrect = Math.random() < 0.75; let selectedVal = botWillBeCorrect ? currentWord.t : opts.find(o => o !== currentWord.t); check(2, null, selectedVal); }, botThinkTime); }
         updateBackButton();
     }
 
-    function renderOptions(opts) {
-        const cont1 = document.getElementById('opts1'); const cont2 = document.getElementById('opts2');
-        cont1.innerHTML = ''; cont2.innerHTML = '';
-        opts.forEach(o => {
-            const b1 = document.createElement('button'); b1.className = 'opt-btn'; b1.textContent = o;
-            b1.onclick = () => check(1, b1, o); cont1.appendChild(b1);
-            
-            const b2 = document.createElement('button'); b2.className = 'opt-btn'; b2.textContent = o;
-            if (gameMode === '1p') { b2.style.pointerEvents = 'none'; } else { b2.onclick = () => check(2, b2, o); }
-            cont2.appendChild(b2);
-        });
-    }
+    function renderOptions(opts) { const cont1 = document.getElementById('opts1'); const cont2 = document.getElementById('opts2'); cont1.innerHTML = ''; cont2.innerHTML = ''; opts.forEach(o => { const b1 = document.createElement('button'); b1.className = 'opt-btn'; b1.textContent = o; b1.onclick = () => check(1, b1, o); cont1.appendChild(b1); const b2 = document.createElement('button'); b2.className = 'opt-btn'; b2.textContent = o; if (gameMode === '1p') { b2.style.pointerEvents = 'none'; } else { b2.onclick = () => check(2, b2, o); } cont2.appendChild(b2); }); }
 
-    function showComboText(count) {
-        const comboEl = document.createElement('div');
-        comboEl.className = 'combo-popup combo-anim';
-        comboEl.innerHTML = `🔥 COMBO x${count} 🔥<br><span style="font-size:24px;">+10 BONUS!</span>`;
-        document.body.appendChild(comboEl);
-        setTimeout(() => { if(document.body.contains(comboEl)) { comboEl.remove(); } }, 1500);
-    }
+    function showComboText(count, isX2) { const comboEl = document.createElement('div'); comboEl.className = 'combo-popup combo-anim' + (isX2 ? ' x2-active' : ''); let bonusText = isX2 ? "+20 BONUS!" : "+10 BONUS!"; comboEl.innerHTML = `🔥 COMBO x${count} 🔥<br><span style="font-size:24px;">${bonusText}</span>`; document.body.appendChild(comboEl); setTimeout(() => { if(document.body.contains(comboEl)) { comboEl.remove(); } }, 1500); }
 
-    function showDynamicIsland(isCorrect, isGolden, isCombo = false) {
-        clearTimeout(islandTimeout);
-        const di = document.getElementById('dynamicIsland');
-        const diText = document.getElementById('diText');
-        const diFill = document.getElementById('diFill');
-
-        di.classList.remove('hidden-island');
-        diFill.style.transition = 'none'; diFill.style.width = '100%';
-
-        if (isCorrect) {
-            let pts = isGolden ? 30 : 10;
-            if(isCombo) pts += 10;
-            diText.innerHTML = `<i class="fas fa-check-circle" style="color:#4ade80"></i> MeBot Doğru Bildi! <span style="color:#4ade80">(+${pts})</span>`;
-        } else {
-            diText.innerHTML = `<i class="fas fa-times-circle" style="color:#f87171"></i> MeBot Yanlış Yaptı! <span style="color:#f87171">(-5)</span>`;
+    function showDynamicIsland(isCorrect, isGolden, isCombo = false, customState = null, customMsg = null, isX2 = false, hatBonus = 0) {
+        clearTimeout(islandTimeout); const di = document.getElementById('dynamicIsland'); const diText = document.getElementById('diText'); const diFill = document.getElementById('diFill'); di.classList.remove('hidden-island'); diFill.style.transition = 'none'; diFill.style.width = '100%';
+        if (customState === 'success') { diText.innerHTML = `<i class="fas fa-check-circle" style="color:#4ade80"></i> <span style="color:#4ade80">${customMsg}</span>`; } 
+        else if (customState === 'error') { diText.innerHTML = `<i class="fas fa-exclamation-triangle" style="color:#f87171"></i> <span style="color:#f87171">${customMsg}</span>`; } 
+        else if (customState === 'info') { diText.innerHTML = `<i class="fas fa-info-circle" style="color:#3b82f6"></i> <span style="color:#3b82f6">${customMsg}</span>`; } 
+        else if (isCorrect) { 
+            let pts = isGolden ? 30 : 10; 
+            if(isCombo) pts += (isX2 ? 20 : 10); 
+            pts += hatBonus; // Şapka bonusunu eklendi
+            let hatMsg = hatBonus > 0 ? ` 🎩(+${hatBonus})` : '';
+            diText.innerHTML = `<i class="fas fa-check-circle" style="color:#4ade80"></i> Doğru Bildin! <span style="color:#4ade80">(+${pts}${hatMsg})</span>`; 
+        } else { 
+            diText.innerHTML = `<i class="fas fa-times-circle" style="color:#f87171"></i> Yanlış Cevap! <span style="color:#f87171">(-5)</span>`; 
         }
-
-        void di.offsetWidth;
-        diFill.style.transition = 'width 1.5s linear';
-        diFill.style.width = '0%';
-        islandTimeout = setTimeout(() => { di.classList.add('hidden-island'); }, 1500);
+        void di.offsetWidth; diFill.style.transition = 'width 1.5s linear'; diFill.style.width = '0%'; islandTimeout = setTimeout(() => { di.classList.add('hidden-island'); }, customMsg ? 2500 : 1500);
     }
 
     function check(teamId, btn, val) {
-        if (!isRoundActive) return;
-        isRoundActive = false; 
-        clearTimeout(aiTimer); 
+        if (!isRoundActive) return; isRoundActive = false; clearTimeout(aiTimer); let turnPoints = 0;
+        
+        // Şapka Bonusu Hesaplama (Sadece 1. Oyuncu için)
+        let hatBonus = 0;
+        if (teamId === 1 && localEquippedHat) {
+            let equippedHatObj = marketItems.find(i => i.id === localEquippedHat);
+            if (equippedHatObj && equippedHatObj.bonusXP) {
+                hatBonus = equippedHatObj.bonusXP;
+            }
+        }
 
         if (val === currentWord.t) {
-            comboCount[teamId - 1]++;
-            let isCombo = comboCount[teamId - 1] >= 3;
-
-            if(btn) btn.classList.add('correct'); 
-            
-            if(isCombo) {
+            comboCount[teamId - 1]++; let isCombo = comboCount[teamId - 1] >= 3; if(btn) btn.classList.add('correct'); 
+            if(isCombo) { 
                 playSafeSound('combo'); 
-                scores[teamId - 1] += isGoldenQuestion ? 40 : 20; 
-                showComboText(comboCount[teamId - 1]);
-                if(teamId === 2 && gameMode === '1p') showDynamicIsland(true, isGoldenQuestion, true);
-            } else {
-                playSafeSound('correct');
-                scores[teamId - 1] += isGoldenQuestion ? 30 : 10;
-                if(teamId === 2 && gameMode === '1p') showDynamicIsland(true, isGoldenQuestion, false);
+                let comboBonus = (isX2ComboActive && teamId === 1) ? 20 : 10; 
+                turnPoints = isGoldenQuestion ? (30 + comboBonus + hatBonus) : (10 + comboBonus + hatBonus); 
+                scores[teamId - 1] += turnPoints; 
+                showComboText(comboCount[teamId - 1], (isX2ComboActive && teamId === 1)); 
+                if(teamId === 1 && gameMode === '1p') showDynamicIsland(true, isGoldenQuestion, true, null, null, isX2ComboActive, hatBonus); 
+                else if (teamId === 2 && gameMode === '1p') showDynamicIsland(false, false, false, "error", "🤖 MeBot Combo Yaptı!"); 
+            } 
+            else { 
+                playSafeSound('correct'); 
+                turnPoints = isGoldenQuestion ? (30 + hatBonus) : (10 + hatBonus); 
+                scores[teamId - 1] += turnPoints; 
+                if(teamId === 1 && gameMode === '1p') showDynamicIsland(true, isGoldenQuestion, false, null, null, false, hatBonus); 
+                else if (teamId === 2 && gameMode === '1p') showDynamicIsland(false, false, false, "error", "🤖 MeBot Doğru Bildi!"); 
             }
         } else {
-            comboCount[teamId - 1] = 0; 
-            if(btn) btn.classList.add('wrong'); 
-            playSafeSound('wrong');
-            scores[teamId - 1] -= 5;
-            if(teamId === 2 && gameMode === '1p') showDynamicIsland(false, isGoldenQuestion);
-            wordPool.unshift(currentWord); 
+            comboCount[teamId - 1] = 0; if(btn) btn.classList.add('wrong'); playSafeSound('wrong'); turnPoints = -5; scores[teamId - 1] += turnPoints; if(teamId === 1 && gameMode === '1p') showDynamicIsland(false, isGoldenQuestion); else if (teamId === 2 && gameMode === '1p') showDynamicIsland(false, false, false, "success", "🤖 MeBot Yanlış Bildi!"); wordPool.unshift(currentWord); 
         }
-
-        updateScores();
         
-        roundTimeout = setTimeout(() => { 
-            try { if (gameMode === '1p') startActualGame(); else goToSelector(); } catch(e) { fullReset(); }
-        }, 1500);
+        // Puanı Veritabanına Yazdırma
+        if (gameMode === '1p' && teamId === 1 && auth.currentUser && turnPoints !== 0) { 
+            db.collection("users").doc(auth.currentUser.uid).set({ 
+                totalPoints: firebase.firestore.FieldValue.increment(turnPoints), 
+                lastPointUpdate: firebase.firestore.FieldValue.serverTimestamp(), 
+                username: auth.currentUser.displayName || auth.currentUser.email.split('@')[0], 
+                email: auth.currentUser.email 
+            }, { merge: true }).catch(err => console.log(err)); 
+        }
+        updateScores(); roundTimeout = setTimeout(() => { try { if (gameMode === '1p') startActualGame(); else goToSelector(); } catch(e) { fullReset(); } }, 1500);
     }
 
-    function updateScores() {
-        document.getElementById('score1').textContent = scores[0];
-        document.getElementById('score2').textContent = scores[1];
-        document.getElementById('ts1-score').textContent = scores[0];
-        document.getElementById('ts2-score').textContent = scores[1];
-    }
+    function updateScores() { document.getElementById('score1').textContent = scores[0]; document.getElementById('score2').textContent = scores[1]; document.getElementById('ts1-score').textContent = scores[0]; document.getElementById('ts2-score').textContent = scores[1]; }
 
     function endGame() {
-        hideAllScreens(); document.getElementById('screenResult').classList.remove('hidden');
-        window.scrollTo(0, 0);
-        const t1 = document.getElementById('t1Input').value.trim() || (gameMode === '1p' ? "OYUNCU" : "TAKIM 1");
-        const t2 = gameMode === '1p' ? "🤖 MeBot" : (document.getElementById('t2Input').value.trim() || "TAKIM 2");
-        let winnerText = "";
-        if (scores[0] > scores[1]) winnerText = t1;
-        else if (scores[1] > scores[0]) winnerText = t2;
-        else winnerText = "BERABERE";
-        document.getElementById('winnerName').textContent = winnerText !== "BERABERE" ? "KAZANAN: " + winnerText : "BERABERE";
-        startConfetti(); updateBackButton();
+        hideAllScreens(); document.getElementById('screenResult').classList.remove('hidden'); window.scrollTo(0, 0); const t1 = document.getElementById('t1Input').value.trim() || (gameMode === '1p' ? "OYUNCU" : "TAKIM 1"); const t2 = gameMode === '1p' ? "🤖 MeBot" : (document.getElementById('t2Input').value.trim() || "TAKIM 2"); let winnerText = ""; if (scores[0] > scores[1]) winnerText = t1; else if (scores[1] > scores[0]) winnerText = t2; else winnerText = "BERABERE"; document.getElementById('winnerName').textContent = winnerText !== "BERABERE" ? "KAZANAN: " + winnerText : "BERABERE"; startConfetti(); updateBackButton();
+        if (gameMode === '1p' && auth.currentUser) { setTimeout(() => { showDynamicIsland(false, false, false, "success", `Puanların anlık olarak başarıyla kaydedildi!`); }, 1000); }
     }
 
-    function startConfetti() {
-        playSafeSound('correct'); setTimeout(()=> playSafeSound('correct'), 200);
-        const colors = ["#ef4444", "#3b82f6", "#0d9488", "#f59e0b"];
-        for(let i=0; i<60; i++) {
-            const c = document.createElement('div'); c.className = 'confetti';
-            c.style.left = Math.random() * 100 + "vw"; c.style.background = colors[Math.floor(Math.random()*colors.length)];
-            c.style.animationDelay = Math.random() * 2 + "s"; document.body.appendChild(c);
+    function startConfetti() { playSafeSound('correct'); setTimeout(()=> playSafeSound('correct'), 200); const colors = ["#ef4444", "#3b82f6", "#0d9488", "#f59e0b"]; for(let i=0; i<60; i++) { const c = document.createElement('div'); c.className = 'confetti'; c.style.left = Math.random() * 100 + "vw"; c.style.background = colors[Math.floor(Math.random()*colors.length)]; c.style.animationDelay = Math.random() * 2 + "s"; document.body.appendChild(c); } }
+    
+    // --- REHBER BOT NEO (ÖĞRETİCİ) ---
+    let currentTourStep = -1;
+    const tourSteps = [
+        { title: "Giriş Yap!", text: "Öncelikle hesabına giriş yapmalısın. Giriş yapmazsan sıralamaya giremez ve XP kazanamazsın kanka!", target: "#btnWelcomeAuth" },
+        { title: "Kuralları Onayla", text: "Güvenlik her şeydir. Gizlilik politikasını okuyup bu kutucuğu işaretlemeden içeriye adım atamazsın.", target: ".welcome-privacy-box" },
+        { title: "Maceraya Atıl", text: "Her şey tamamsa bu butona basarak İngilizce kapışmasına dalabilirsin!", target: ".btn-start-game" },
+        { title: "Market ve Menü", text: "Oyuna girdikten sonra üst menüden Markete girip İksir ve Şapka alabilir, sıralamanı görebilirsin. Bol şans!", target: null }
+    ];
+
+    function positionNeo(el) {
+        const dialog = document.getElementById('tourDialog');
+        if(!el) {
+            dialog.style.left = "50%"; dialog.style.top = "50%"; 
+            dialog.style.transform = "translate(-50%, -50%)"; 
+            return;
+        }
+        
+        dialog.style.transform = "none";
+        const rect = el.getBoundingClientRect();
+        
+        const dWidth = dialog.offsetWidth || 300;
+        const dHeight = dialog.offsetHeight || 220;
+        
+        let left = rect.left + (rect.width / 2) - (dWidth / 2);
+        let top = rect.bottom + 15;
+        
+        if(left < 10) left = 10;
+        if(left + dWidth + 10 > window.innerWidth) left = window.innerWidth - dWidth - 10;
+        
+        if(top + dHeight + 10 > window.innerHeight) {
+            top = rect.top - dHeight - 15; 
+        }
+        
+        dialog.style.left = left + "px";
+        dialog.style.top = top + "px";
+    }
+
+    function showNeoWelcome() {
+        document.getElementById('tourOverlay').classList.add('active');
+        const dialog = document.getElementById('tourDialog');
+        dialog.classList.add('active');
+        positionNeo(null);
+        playSafeSound('golden');
+    }
+
+    function endTour() {
+        localStorage.setItem('neoTourDone', 'true');
+        document.getElementById('tourOverlay').classList.remove('active');
+        document.getElementById('tourDialog').classList.remove('active');
+        clearTourHighlight();
+        playSafeSound('click');
+    }
+
+    function nextTourStep() {
+        playSafeSound('click');
+        clearTourHighlight();
+        currentTourStep++;
+        
+        if(currentTourStep >= tourSteps.length) { endTour(); return; }
+
+        const step = tourSteps[currentTourStep];
+        document.getElementById('tourTitle').textContent = step.title;
+        document.getElementById('tourText').textContent = step.text;
+        document.getElementById('tourNextBtn').innerHTML = (currentTourStep === tourSteps.length - 1) ? "<i class='fas fa-check'></i> Bitir" : "Sonraki <i class='fas fa-arrow-right'></i>";
+        
+        if(step.target) {
+            let el = document.querySelector(step.target);
+            if(el) {
+                el.classList.add('tour-highlight');
+                positionNeo(el);
+            } else { positionNeo(null); }
+        } else {
+            positionNeo(null);
         }
     }
+
+    function clearTourHighlight() { document.querySelectorAll('.tour-highlight').forEach(el => el.classList.remove('tour-highlight')); }
+
 </script>
 
 </body>
